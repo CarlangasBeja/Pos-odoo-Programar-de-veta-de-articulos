@@ -1,0 +1,24 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="Directory.Build.props" />
+    <File Path="global.json" />
+  </Folder>
+  <Folder Name="/Core/">
+    <Project Path="src/Pos.Domain/Pos.Domain.csproj" />
+    <Project Path="src/Pos.Application/Pos.Application.csproj" />
+  </Folder>
+  <Folder Name="/Infrastructure/">
+    <Project Path="src/Pos.Infrastructure/Pos.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/Presentation/">
+    <Project Path="src/Pos.Api/Pos.Api.csproj" />
+  </Folder>
+  <Folder Name="/Tests/">
+    <Project Path="tests/Pos.UnitTests/Pos.UnitTests.csproj" />
+    <Project Path="tests/Pos.ApiTests/Pos.ApiTests.csproj" />
+    <Project Path="tests/Pos.IntegrationTests/Pos.IntegrationTests.csproj" />
+  </Folder>
+  <Folder Name="/Tools/">
+    <Project Path="tools/Pos.Tools.HashPassword/Pos.Tools.HashPassword.csproj" />
+  </Folder>
+</Solution>

@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Capa de aplicación: casos de uso escritos con CQRS (Commands y Queries) y el patrón Mediator (MediatR),
+    más los contratos (interfaces) hacia el exterior. Solo depende del dominio; no conoce HTTP, ASP.NET Core ni Odoo.
+    Versiones fijadas como en el "Taller de cierre de Application" (decisión D10 del taller).
+  -->
+  <PropertyGroup>
+    <RootNamespace>Pos.Application</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MediatR" Version="14.2.0" />
+    <PackageReference Include="FluentValidation" Version="12.2.0" />
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.2.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Pos.Domain\Pos.Domain.csproj" />
+  </ItemGroup>
+</Project>

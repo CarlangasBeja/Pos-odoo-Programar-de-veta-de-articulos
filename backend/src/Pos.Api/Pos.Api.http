@@ -1,0 +1,69 @@
+# Solicitudes de ejemplo para Visual Studio (clic en "Enviar solicitud") o VS Code (extensión REST Client).
+# 1) Ejecute "Iniciar sesión"; 2) copie el accessToken en @token; 3) pruebe el resto.
+@api = http://localhost:5080
+@token = pegue-aqui-el-accessToken
+
+### Estado de la API y de Odoo
+GET {{api}}/api/health
+
+### Iniciar sesión (cajero de prueba en Development)
+POST {{api}}/api/auth/login
+Content-Type: application/json
+
+{ "username": "cajero", "password": "Cajero2026!" }
+
+### Operador actual
+GET {{api}}/api/auth/me
+Authorization: Bearer {{token}}
+
+### Sesión POS abierta en Odoo y métodos de pago
+GET {{api}}/api/pos/sessions/active
+Authorization: Bearer {{token}}
+
+### Buscar productos (RF-01, RF-02)
+GET {{api}}/api/products?search=caf&sort=priceAsc&page=1&pageSize=10
+Authorization: Bearer {{token}}
+
+### Categorías del POS
+GET {{api}}/api/products/categories
+Authorization: Bearer {{token}}
+
+### Políticas de descuento para mi rol (RF-06)
+GET {{api}}/api/discounts/policies
+Authorization: Bearer {{token}}
+
+### Vista previa con descuento (no registra nada)
+POST {{api}}/api/sales/preview
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "sessionId": 1,
+  "lines": [ { "productId": 14, "quantity": 2 }, { "productId": 16, "quantity": 1 } ],
+  "discount": { "policyCode": "MANUAL", "percentage": 10 }
+}
+
+### Registrar venta con pago en efectivo (RF-09 a RF-12). Repítala con la MISMA clave: no se duplica (RN-08)
+POST {{api}}/api/sales
+Authorization: Bearer {{token}}
+Content-Type: application/json
+Idempotency-Key: 7d3f6f1e-9b7a-4c1e-8d2a-1f0b2c3d4e5f
+
+{
+  "sessionId": 1,
+  "lines": [ { "productId": 14, "quantity": 2 }, { "productId": 16, "quantity": 1 } ],
+  "discount": null,
+  "payment": { "paymentMethodId": 1, "amountTendered": 50000 }
+}
+
+### Estado real de una venta (útil si el resultado fue incierto)
+GET {{api}}/api/sales/attempts/7d3f6f1e-9b7a-4c1e-8d2a-1f0b2c3d4e5f
+Authorization: Bearer {{token}}
+
+### Historial (RF-13)
+GET {{api}}/api/sales?search=&state=paid&page=1&pageSize=20
+Authorization: Bearer {{token}}
+
+### Detalle de una venta (RF-14)
+GET {{api}}/api/sales/1
+Authorization: Bearer {{token}}

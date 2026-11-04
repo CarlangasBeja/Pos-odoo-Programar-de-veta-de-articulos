@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="es-CO">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#eef2f1" />
+    <meta name="description" content="Punto de venta web integrado con Odoo 20 Community" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>Caja POS Web</title>
+    <script>
+      // Aplica el tema antes de pintar para evitar un destello del tema equivocado.
+      (function () {
+        try {
+          var stored = localStorage.getItem('pos.theme');
+          var theme = stored === 'light' || stored === 'dark'
+            ? stored
+            : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+          document.documentElement.dataset.theme = theme;
+        } catch (e) {
+          document.documentElement.dataset.theme = 'light';
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <noscript>Esta aplicación necesita JavaScript para funcionar.</noscript>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

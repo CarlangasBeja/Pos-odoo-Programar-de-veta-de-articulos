@@ -1,0 +1,483 @@
+{
+  "info": {
+    "_postman_id": "177dc04b-dae9-54a9-a733-59198ba5eb82",
+    "name": "POS Web + Odoo 20 (Patrones de Software)",
+    "description": "Colección para demostrar los casos de uso de la API .NET y estudiar la API JSON-2 de Odoo 20.\n\n1. Ejecute `odoo/setup.ps1`, inicie `Pos.Api` (http://localhost:5080) y ejecute la carpeta 1 en orden.\n2. La carpeta 2 consulta Odoo directamente SOLO para estudiar el ERP: copie la API key en la variable `odoo_api_key` de su copia local de la colección (Postman la guarda en su equipo). Nunca la suba al repositorio ni la muestre en capturas.\n\nEl frontend del POS nunca llama a Odoo: todo pasa por la API .NET, que es la única que conoce la API key.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "api_url",
+      "value": "http://localhost:5080"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "session_id",
+      "value": "1"
+    },
+    {
+      "key": "cash_method_id",
+      "value": "1"
+    },
+    {
+      "key": "product_id_1",
+      "value": "1"
+    },
+    {
+      "key": "product_id_2",
+      "value": "2"
+    },
+    {
+      "key": "sale_key",
+      "value": ""
+    },
+    {
+      "key": "order_id",
+      "value": "1"
+    },
+    {
+      "key": "odoo_url",
+      "value": "http://localhost:8069"
+    },
+    {
+      "key": "odoo_db",
+      "value": "pos"
+    },
+    {
+      "key": "odoo_api_key",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "1. API del POS (.NET) - casos de uso",
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{token}}",
+            "type": "string"
+          }
+        ]
+      },
+      "item": [
+        {
+          "name": "Estado de la API y de Odoo",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{api_url}}/api/health",
+            "description": "Público. Indica si la API responde y si alcanza a Odoo (sin datos sensibles).",
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "Iniciar sesión (guarda el token)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{api_url}}/api/auth/login",
+            "description": "LoginCommand. Usuarios de demostración del entorno Development: cajero / Cajero2026! y supervisor / Supervisor2026!.\nPruebe una contraseña incorrecta: 401 con el mismo mensaje exista o no el usuario.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"cajero\",\n  \"password\": \"Cajero2026!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set('token', pm.response.json().accessToken);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Operador actual",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{api_url}}/api/auth/me",
+            "description": "Operador del token y su rol."
+          }
+        },
+        {
+          "name": "Sesión POS activa (guarda sesión y método en efectivo)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{api_url}}/api/pos/sessions/active",
+            "description": "GetActiveSessionQuery (RF-10, P03). Guarda el id de la sesión y del método de pago en efectivo para las solicitudes siguientes."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const s = pm.response.json();",
+                  "pm.collectionVariables.set('session_id', s.id);",
+                  "const cash = (s.paymentMethods || []).find(m => m.type === 'cash' && m.supported);",
+                  "if (cash) pm.collectionVariables.set('cash_method_id', cash.id);",
+                  "pm.test('La sesión permite vender', () => pm.expect(s.acceptsSales).to.eql(true));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Buscar productos (guarda dos productos vendibles)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{api_url}}/api/products?search=&pageSize=24&sort=nameAsc",
+            "description": "SearchProductsQuery (RF-01, RF-02). Cambie `search` para buscar por nombre, código o código de barras."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const items = pm.response.json().items.filter(p => p.sellable);",
+                  "if (items.length >= 2) { pm.collectionVariables.set('product_id_1', items[0].id); pm.collectionVariables.set('product_id_2', items[1].id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Categorías del catálogo",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{api_url}}/api/products/categories",
+            "description": "GetProductCategoriesQuery."
+          }
+        },
+        {
+          "name": "Políticas de descuento del rol",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{api_url}}/api/discounts/policies",
+            "description": "GetDiscountPoliciesQuery (RF-06)."
+          }
+        },
+        {
+          "name": "Vista previa de la venta (total verificado)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{api_url}}/api/sales/preview",
+            "description": "PreviewSaleQuery (RF-05, RN-03, RN-04). El cliente solo envía productos y cantidades; el precio sale de Odoo.\nPruebe `\"discount\": {\"policyCode\": \"MANUAL\", \"percentage\": 25}` con el cajero: 403 con el motivo.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sessionId\": {{session_id}},\n  \"lines\": [\n    {\n      \"productId\": {{product_id_1}},\n      \"quantity\": 2\n    },\n    {\n      \"productId\": {{product_id_2}},\n      \"quantity\": 1\n    }\n  ],\n  \"discount\": null\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Registrar venta (clave nueva)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Idempotency-Key",
+                "value": "{{sale_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{api_url}}/api/sales",
+            "description": "RegisterSaleCommand (RF-09 a RF-12). El script genera una clave de idempotencia nueva en cada envío.\n201 = registrada y pagada en Odoo; 202 = resultado incierto (consulte el intento); 4xx = rechazada con el motivo.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sessionId\": {{session_id}},\n  \"lines\": [\n    {\n      \"productId\": {{product_id_1}},\n      \"quantity\": 2\n    },\n    {\n      \"productId\": {{product_id_2}},\n      \"quantity\": 1\n    }\n  ],\n  \"discount\": null,\n  \"payment\": {\n    \"paymentMethodId\": {{cash_method_id}},\n    \"amountTendered\": 100000\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('sale_key', pm.variables.replaceIn('{{$guid}}'));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.json().orderId) pm.collectionVariables.set('order_id', pm.response.json().orderId);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Registrar venta (repetir la MISMA clave)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Idempotency-Key",
+                "value": "{{sale_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{api_url}}/api/sales",
+            "description": "RN-08 / P06: reenvía la venta anterior con la misma clave. Responde 200 con `replayed: true` y la misma orden: no se crea otra venta.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sessionId\": {{session_id}},\n  \"lines\": [\n    {\n      \"productId\": {{product_id_1}},\n      \"quantity\": 2\n    },\n    {\n      \"productId\": {{product_id_2}},\n      \"quantity\": 1\n    }\n  ],\n  \"discount\": null,\n  \"payment\": {\n    \"paymentMethodId\": {{cash_method_id}},\n    \"amountTendered\": 100000\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('No duplica la venta', () => pm.expect(pm.response.json().replayed).to.eql(true));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Verificar un intento de venta",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{api_url}}/api/sales/attempts/{{sale_key}}",
+            "description": "VerifySaleAttemptCommand (RF-17). Consulta en Odoo el estado real de la venta con esa clave; nunca la reenvía."
+          }
+        },
+        {
+          "name": "Historial de ventas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{api_url}}/api/sales?search=&state=all&pageSize=10",
+            "description": "GetSalesHistoryQuery (RF-13). Filtros: search, state (all, paid, posted, draft, cancelled), from, to (AAAA-MM-DD)."
+          }
+        },
+        {
+          "name": "Detalle de una venta",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{api_url}}/api/sales/{{order_id}}",
+            "description": "GetSaleDetailQuery (RF-14): líneas y pagos leídos de Odoo."
+          }
+        },
+        {
+          "name": "Validación: venta sin Idempotency-Key",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{api_url}}/api/sales",
+            "description": "La rechaza ValidationBehavior antes del Handler: 400 con código IDEMPOTENCY.KEY_REQUIRED y el campo afectado.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sessionId\": {{session_id}},\n  \"lines\": [\n    {\n      \"productId\": {{product_id_1}},\n      \"quantity\": 2\n    },\n    {\n      \"productId\": {{product_id_2}},\n      \"quantity\": 1\n    }\n  ],\n  \"discount\": null,\n  \"payment\": {\n    \"paymentMethodId\": {{cash_method_id}},\n    \"amountTendered\": 100000\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Validación: página fuera de rango",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{api_url}}/api/products?pageSize=500",
+            "description": "400 PAGING.INVALID_PAGE_SIZE con `target: pageSize`."
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Odoo 20 JSON-2 - solo lectura (estudio)",
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{odoo_api_key}}",
+            "type": "string"
+          }
+        ]
+      },
+      "item": [
+        {
+          "name": "Sesiones POS abiertas",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Odoo-Database",
+                "value": "{{odoo_db}}"
+              }
+            ],
+            "url": "{{odoo_url}}/json/2/pos.session/search_read",
+            "description": "Equivale a lo que hace OdooPosSessionGateway antes de vender.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"domain\": [\n    [\n      \"state\",\n      \"=\",\n      \"opened\"\n    ]\n  ],\n  \"fields\": [\n    \"id\",\n    \"name\",\n    \"state\",\n    \"config_id\"\n  ],\n  \"limit\": 10\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Productos disponibles en el POS",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Odoo-Database",
+                "value": "{{odoo_db}}"
+              }
+            ],
+            "url": "{{odoo_url}}/json/2/product.product/search_read",
+            "description": "El precio de lista no es el total cobrado: los impuestos y descuentos los aplica el backend con las reglas de Odoo (D6).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"domain\": [\n    [\n      \"available_in_pos\",\n      \"=\",\n      true\n    ],\n    [\n      \"sale_ok\",\n      \"=\",\n      true\n    ]\n  ],\n  \"fields\": [\n    \"id\",\n    \"display_name\",\n    \"default_code\",\n    \"barcode\",\n    \"lst_price\",\n    \"taxes_id\"\n  ],\n  \"limit\": 10\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Métodos de pago",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Odoo-Database",
+                "value": "{{odoo_db}}"
+              }
+            ],
+            "url": "{{odoo_url}}/json/2/pos.payment.method/search_read",
+            "description": "Métodos de pago configurados.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"domain\": [],\n  \"fields\": [\n    \"id\",\n    \"name\",\n    \"type\",\n    \"journal_id\"\n  ],\n  \"limit\": 10\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Orden registrada por el POS (por uuid)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Odoo-Database",
+                "value": "{{odoo_db}}"
+              }
+            ],
+            "url": "{{odoo_url}}/json/2/pos.order/search_read",
+            "description": "Busca la orden que creó la última venta registrada desde la API: el uuid de la orden es la clave de idempotencia (D3).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"domain\": [\n    [\n      \"uuid\",\n      \"=\",\n      \"{{sale_key}}\"\n    ]\n  ],\n  \"fields\": [\n    \"id\",\n    \"name\",\n    \"state\",\n    \"amount_tax\",\n    \"amount_total\",\n    \"amount_paid\",\n    \"amount_return\",\n    \"lines\",\n    \"payment_ids\"\n  ],\n  \"limit\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,126 @@
+/*
+ * Tokens de diseño. Interfaz fría y sobria (gris verdoso + petróleo) para que lo único cálido sea
+ * el ticket, que imita el papel térmico de una caja registradora.
+ */
+:root {
+  color-scheme: light;
+
+  --font: 'Atkinson Hyperlegible', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+
+  /* Escala tipográfica modular (≈1.2) */
+  --text-xs: 0.8125rem; /* 13 */
+  --text-s: 0.875rem; /* 14 */
+  --text-m: 1rem; /* 16 */
+  --text-l: 1.1875rem; /* 19 */
+  --text-xl: 1.4375rem; /* 23 */
+  --text-2xl: 1.75rem; /* 28 */
+  --text-3xl: 2.125rem; /* 34 */
+
+  --bg: #eef2f1;
+  --surface: #ffffff;
+  --surface-2: #f5f8f7;
+  --sunken: #e2e9e8;
+  --line: #d2dcdb;
+  --line-strong: #aebdbc;
+  --ink: #14232b;
+  --ink-2: #3f525a;
+  --ink-3: #66787f;
+
+  --primary: #0b5d66;
+  --primary-hover: #084a52;
+  --primary-ink: #ffffff;
+  --primary-soft: #d6ebed;
+  --focus: #178a9a;
+
+  --success: #1b7a4b;
+  --success-soft: #dcf1e5;
+  --warning: #8f5400;
+  --warning-soft: #fbedd2;
+  --danger: #b02d23;
+  --danger-soft: #fae0dc;
+  --info: #23599a;
+  --info-soft: #e0ebf8;
+
+  --paper: #fffdf4;
+  --paper-ink: #29271f;
+  --paper-ink-2: #6b6656;
+  --paper-rule: #ddd4b8;
+
+  --radius-s: 6px;
+  --radius-m: 10px;
+  --radius-l: 16px;
+  --shadow-pop: 0 24px 60px -18px rgb(10 40 46 / 0.45);
+  --shadow-paper: 0 1px 0 rgb(70 60 30 / 0.08), 0 10px 24px -14px rgb(70 60 30 / 0.35);
+  --backdrop: rgb(9 27 31 / 0.55);
+
+  --header-h: 64px;
+  --gutter: clamp(16px, 2.2vw, 24px);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+    --bg: #0d1517;
+    --surface: #142024;
+    --surface-2: #19282d;
+    --sunken: #0a1113;
+    --line: #253940;
+    --line-strong: #3a535b;
+    --ink: #e4edef;
+    --ink-2: #b1c2c7;
+    --ink-3: #8399a0;
+    --primary: #45b8c3;
+    --primary-hover: #66c9d2;
+    --primary-ink: #04252a;
+    --primary-soft: #143c42;
+    --focus: #6fd3dc;
+    --success: #54c58b;
+    --success-soft: #133325;
+    --warning: #f0b14d;
+    --warning-soft: #3a2a0e;
+    --danger: #f2796d;
+    --danger-soft: #3d1714;
+    --info: #7fb2ef;
+    --info-soft: #14283f;
+    --paper: #1e2321;
+    --paper-ink: #ece7d6;
+    --paper-ink-2: #aaa48f;
+    --paper-rule: #3c3f37;
+    --shadow-pop: 0 24px 60px -18px rgb(0 0 0 / 0.7);
+    --shadow-paper: 0 1px 0 rgb(0 0 0 / 0.4), 0 12px 26px -14px rgb(0 0 0 / 0.8);
+    --backdrop: rgb(2 8 10 / 0.7);
+  }
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --bg: #0d1517;
+  --surface: #142024;
+  --surface-2: #19282d;
+  --sunken: #0a1113;
+  --line: #253940;
+  --line-strong: #3a535b;
+  --ink: #e4edef;
+  --ink-2: #b1c2c7;
+  --ink-3: #8399a0;
+  --primary: #45b8c3;
+  --primary-hover: #66c9d2;
+  --primary-ink: #04252a;
+  --primary-soft: #143c42;
+  --focus: #6fd3dc;
+  --success: #54c58b;
+  --success-soft: #133325;
+  --warning: #f0b14d;
+  --warning-soft: #3a2a0e;
+  --danger: #f2796d;
+  --danger-soft: #3d1714;
+  --info: #7fb2ef;
+  --info-soft: #14283f;
+  --paper: #1e2321;
+  --paper-ink: #ece7d6;
+  --paper-ink-2: #aaa48f;
+  --paper-rule: #3c3f37;
+  --shadow-pop: 0 24px 60px -18px rgb(0 0 0 / 0.7);
+  --shadow-paper: 0 1px 0 rgb(0 0 0 / 0.4), 0 12px 26px -14px rgb(0 0 0 / 0.8);
+  --backdrop: rgb(2 8 10 / 0.7);
+}

@@ -1,0 +1,49 @@
+# Ejecutado en el entorno de desarrollo (sin acceso a nuget.org) con NUnitLite y sustitutos locales de MediatR 14.2.0 y
+# FluentValidation 12.2.0 con la misma API pública. En Visual Studio estas mismas pruebas corren con los paquetes reales.
+
+NUnitLite 4.3.2 (Release)
+Copyright (c) Charlie Poole, Rob Prouse and Contributors. MIT License - see LICENSE.txt
+
+Runtime Environment
+   OS Version: Ubuntu 24.04.5 LTS
+  CLR Version: 10.0.13
+
+Test Files
+    /home/claude/harness/ApiRunner/bin/Debug/net10.0/Pos.ApiTests.dll
+
+Test Discovery
+  Start time: 2026-11-03 02:06:09Z
+    End time: 2026-11-03 02:06:09Z
+    Duration: 0.048 seconds
+
+=> Pos.ApiTests.ApiContractTests.CredencialesIncorrectasDevuelven401ConMensajeComprensible
+=> Pos.ApiTests.ApiContractTests.ElCatalogoDevuelvePrecioConImpuestos
+=> Pos.ApiTests.ApiContractTests.ElEstadoDeSaludInformaQueOdooNoResponde
+=> Pos.ApiTests.ApiContractTests.ElTokenIdentificaAlOperadorYSuRol
+=> Pos.ApiTests.ApiContractTests.ElValidatorDelPipelineRechazaLaFormaConElCampoDelJson
+=> Pos.ApiTests.ApiContractTests.LasRespuestasIncluyenEncabezadosDeSeguridad
+=> Pos.ApiTests.ApiContractTests.LaVistaPreviaCalculaElTotalVerificado
+=> Pos.ApiTests.ApiContractTests.SinClaveDeIdempotenciaLaVentaSeRechaza
+=> Pos.ApiTests.ApiContractTests.SinTokenLaApiRespondeNoAutenticadoEnEspanol
+=> Pos.ApiTests.ApiContractTests.SiOdooNoEstaDisponibleSeResponde503
+=> Pos.ApiTests.ApiContractTests.UnaPaginaFueraDeRangoDevuelve400
+=> Pos.ApiTests.ApiContractTests.UnaSesionCerradaImpideVenderCon422
+=> Pos.ApiTests.ApiContractTests.UnaVentaRegistradaDevuelve201YLaRepeticion200SinDuplicar
+=> Pos.ApiTests.ApiContractTests.UnDescuentoNoAutorizadoDevuelve403
+=> Pos.ApiTests.ApiContractTests.UnJsonMalFormadoDevuelve400ConElCampoProblematico
+=> Pos.ApiTests.ApiContractTests.UnResultadoInciertoDevuelve202ConLaRutaParaVerificar
+=> Pos.ApiTests.ApiContractTests.UnSupervisorPuedeAutorizarUnDescuentoMayor
+=> Pos.ApiTests.ApiContractTests.VariosErroresDeValidacionSeInformanJuntos
+
+Run Settings
+    Number of Test Workers: 2
+    Work Directory: /home/claude/harness
+    Internal Trace: Off
+
+Test Run Summary
+  Overall result: Passed
+  Test Count: 18, Passed: 18, Failed: 0, Warnings: 0, Inconclusive: 0, Skipped: 0
+  Start time: 2026-11-03 02:06:09Z
+    End time: 2026-11-03 02:06:10Z
+    Duration: 1.402 seconds
+

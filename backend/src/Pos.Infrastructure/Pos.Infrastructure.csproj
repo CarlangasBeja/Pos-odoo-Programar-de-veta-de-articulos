@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Capa de infraestructura: adaptadores que implementan los puertos de Application
+    (Odoo vía JSON-2, almacén de idempotencia, seguridad). Solo usa el framework compartido de ASP.NET Core,
+    sin paquetes NuGet externos.
+  -->
+  <PropertyGroup>
+    <RootNamespace>Pos.Infrastructure</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Pos.Application\Pos.Application.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Las pruebas verifican los mapeadores internos del adaptador de Odoo. -->
+    <InternalsVisibleTo Include="Pos.UnitTests" />
+  </ItemGroup>
+</Project>

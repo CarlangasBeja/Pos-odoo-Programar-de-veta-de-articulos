@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Pruebas del contrato HTTP de la API: levanta la API real (Kestrel en un puerto libre) y reemplaza
+    los adaptadores de Odoo por los mismos dobles de prueba de Pos.UnitTests.
+  -->
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="NUnit" Version="4.3.2" />
+    <PackageReference Include="NUnit3TestAdapter" Version="5.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Pos.Api\Pos.Api.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="NUnit.Framework" />
+    <!-- Se reutilizan los dobles de prueba sin duplicar código. -->
+    <Compile Include="..\Pos.UnitTests\Fakes\TestData.cs" Link="Fakes\TestData.cs" />
+    <Compile Include="..\Pos.UnitTests\Fakes\FakeGateways.cs" Link="Fakes\FakeGateways.cs" />
+  </ItemGroup>
+</Project>

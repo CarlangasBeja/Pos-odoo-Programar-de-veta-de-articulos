@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Capa de dominio: reglas de negocio puras. No depende de ningún otro proyecto ni framework. -->
+  <PropertyGroup>
+    <RootNamespace>Pos.Domain</RootNamespace>
+  </PropertyGroup>
+</Project>

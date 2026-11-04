@@ -1,0 +1,47 @@
+# Odoo 20 Community + PostgreSQL para el POS Web (.NET).
+# Uso normal: ejecute odoo/setup.ps1 (Windows) o odoo/setup.sh (Linux/macOS), que levantan esto y lo configuran.
+#
+#   docker compose -f odoo/docker-compose.yml up -d      # iniciar
+#   docker compose -f odoo/docker-compose.yml down       # detener (los datos se conservan en los volúmenes)
+#   docker compose -f odoo/docker-compose.yml down -v    # detener y BORRAR todos los datos
+name: pos-odoo20
+
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: odoo
+      POSTGRES_PASSWORD: ${ODOO_DB_PASSWORD:-odoo}
+    volumes:
+      - pos-odoo-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U odoo -d postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  odoo:
+    image: odoo:20.0
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8069:8069"
+    environment:
+      # Variables estándar de PostgreSQL: así también los comandos "docker compose exec odoo odoo ..." encuentran la base.
+      PGHOST: db
+      PGPORT: "5432"
+      PGUSER: odoo
+      PGPASSWORD: ${ODOO_DB_PASSWORD:-odoo}
+    command: ["odoo", "--db-filter=^${ODOO_DB_NAME:-pos}$$"]
+    volumes:
+      - pos-odoo-data:/var/lib/odoo
+      # Scripts de preparación disponibles dentro del contenedor (solo lectura).
+      - ./:/opt/pos-setup:ro
+    restart: unless-stopped
+
+volumes:
+  pos-odoo-db:
+  pos-odoo-data:

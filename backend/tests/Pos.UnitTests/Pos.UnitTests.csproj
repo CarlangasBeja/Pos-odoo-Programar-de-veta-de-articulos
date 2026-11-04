@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Pruebas unitarias de Domain, Application e Infrastructure con dobles de prueba (sin Odoo real). -->
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="NUnit" Version="4.3.2" />
+    <PackageReference Include="NUnit3TestAdapter" Version="5.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Pos.Domain\Pos.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Pos.Application\Pos.Application.csproj" />
+    <ProjectReference Include="..\..\src\Pos.Infrastructure\Pos.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="NUnit.Framework" />
+    <EmbeddedResource Include="Domain\Data\odoo20-tax-vectors.json" LogicalName="odoo20-tax-vectors.json" />
+  </ItemGroup>
+</Project>

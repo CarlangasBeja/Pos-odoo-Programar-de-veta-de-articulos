@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Pruebas de integración REALES contra Odoo 20 (P09). Usan el mismo pipeline que la API (ISender, behaviors,
+    Handlers) y los adaptadores de Infrastructure, sin dobles.
+    Leen la configuración de los user-secrets de Pos.Api (los deja odoo/setup.ps1) o de variables de entorno.
+    Si Odoo no está configurado, las pruebas se marcan como "ignoradas" con instrucciones.
+  -->
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="NUnit" Version="4.3.2" />
+    <PackageReference Include="NUnit3TestAdapter" Version="5.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Pos.Application\Pos.Application.csproj" />
+    <ProjectReference Include="..\..\src\Pos.Infrastructure\Pos.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="NUnit.Framework" />
+  </ItemGroup>
+</Project>

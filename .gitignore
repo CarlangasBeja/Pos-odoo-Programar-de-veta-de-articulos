@@ -1,0 +1,25 @@
+# ---- .NET / Visual Studio ----
+bin/
+obj/
+.vs/
+*.user
+*.suo
+TestResults/
+*.trx
+backend/src/Pos.Api/App_Data/
+
+# ---- Node / Vite ----
+node_modules/
+dist/
+coverage/
+*.local
+
+# ---- Secretos y entorno (NUNCA al repositorio) ----
+.env
+odoo/.env
+appsettings.*.local.json
+*.pfx
+
+# ---- Sistema ----
+.DS_Store
+Thumbs.db

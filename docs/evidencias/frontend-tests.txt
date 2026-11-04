@@ -1,0 +1,17 @@
+
+ RUN  v3.2.0 /home/claude/pos-odoo/frontend
+
+ ✓ tests/presentation/ui.test.tsx (9 tests) 1084ms
+   ✓ Búsqueda del catálogo > se actualiza mientras se escribe, sin presionar Enter  356ms
+   ✓ Búsqueda del catálogo > cuando no hay resultados sugiere cómo seguir  331ms
+ ✓ tests/domain/tax.test.ts (601 tests) 65ms
+ ✓ tests/infrastructure/apiClient.test.ts (7 tests) 32ms
+ ✓ tests/domain/cart.test.ts (13 tests) 18ms
+ ✓ tests/application/checkout.test.ts (9 tests) 9ms
+ ✓ tests/application/usecases.test.ts (7 tests) 8ms
+
+ Test Files  6 passed (6)
+      Tests  646 passed (646)
+   Start at  21:06:27
+   Duration  5.46s (transform 373ms, setup 343ms, collect 753ms, tests 1.22s, environment 1.92s, prepare 369ms)
+

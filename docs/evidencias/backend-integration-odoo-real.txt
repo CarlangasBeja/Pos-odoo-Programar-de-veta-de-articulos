@@ -1,0 +1,74 @@
+# Ejecutado con NUnitLite y sustitutos locales de MediatR/FluentValidation (misma API pública) contra Odoo 20.0 real.
+# Las ventas pasan por el mismo pipeline que la API: ISender -> LoggingBehavior -> ValidationBehavior -> Handler -> JSON-2.
+
+### Odoo 20.0 Community - compañía Colombia (COP, l10n_co, round_globally)
+NUnitLite 4.3.2 (Release)
+Copyright (c) Charlie Poole, Rob Prouse and Contributors. MIT License - see LICENSE.txt
+
+Runtime Environment
+   OS Version: Ubuntu 24.04.5 LTS
+  CLR Version: 10.0.13
+
+Test Files
+    /home/claude/harness/IntegrationRunner/bin/Debug/net10.0/Pos.IntegrationTests.dll
+
+Test Discovery
+  Start time: 2026-11-03 02:06:18Z
+    End time: 2026-11-03 02:06:18Z
+    Duration: 0.035 seconds
+
+=> Pos.IntegrationTests.OdooIntegrationTests.Odoo_ElHistorialEncuentraLasVentasDelPuntoDeVenta
+=> Pos.IntegrationTests.OdooIntegrationTests.Odoo_ExisteUnaSesionAbiertaConEfectivo
+=> Pos.IntegrationTests.OdooIntegrationTests.P09_RegistraEnOdooUnaVentaDeDosProductosEnEfectivoYLaVerifica
+Venta registrada en Odoo: POS Web .NET - 000014 (id 14), total 11355.0, estado Paid
+=> Pos.IntegrationTests.OdooIntegrationTests.P09_RepetirLaSolicitudNoCreaUnaSegundaOrdenEnOdoo
+=> Pos.IntegrationTests.OdooIntegrationTests.P09_UnDescuentoAutorizadoSeRegistraConElTotalQueCalculaOdoo
+
+Run Settings
+    Number of Test Workers: 2
+    Work Directory: /home/claude/harness
+    Internal Trace: Off
+
+Test Run Summary
+  Overall result: Passed
+  Test Count: 5, Passed: 5, Failed: 0, Warnings: 0, Inconclusive: 0, Skipped: 0
+  Start time: 2026-11-03 02:06:18Z
+    End time: 2026-11-03 02:06:20Z
+    Duration: 1.796 seconds
+
+
+### Odoo 20.0 Community - compañía genérica (USD, round_globally)
+NUnitLite 4.3.2 (Release)
+Copyright (c) Charlie Poole, Rob Prouse and Contributors. MIT License - see LICENSE.txt
+
+Runtime Environment
+   OS Version: Ubuntu 24.04.5 LTS
+  CLR Version: 10.0.13
+
+Test Files
+    /home/claude/harness/IntegrationRunner/bin/Debug/net10.0/Pos.IntegrationTests.dll
+
+Test Discovery
+  Start time: 2026-11-03 02:06:21Z
+    End time: 2026-11-03 02:06:21Z
+    Duration: 0.044 seconds
+
+=> Pos.IntegrationTests.OdooIntegrationTests.Odoo_ElHistorialEncuentraLasVentasDelPuntoDeVenta
+=> Pos.IntegrationTests.OdooIntegrationTests.Odoo_ExisteUnaSesionAbiertaConEfectivo
+=> Pos.IntegrationTests.OdooIntegrationTests.P09_RegistraEnOdooUnaVentaDeDosProductosEnEfectivoYLaVerifica
+Venta registrada en Odoo: POS Web .NET - 000012 (id 14), total 8.15, estado Paid
+=> Pos.IntegrationTests.OdooIntegrationTests.P09_RepetirLaSolicitudNoCreaUnaSegundaOrdenEnOdoo
+=> Pos.IntegrationTests.OdooIntegrationTests.P09_UnDescuentoAutorizadoSeRegistraConElTotalQueCalculaOdoo
+
+Run Settings
+    Number of Test Workers: 2
+    Work Directory: /home/claude/harness
+    Internal Trace: Off
+
+Test Run Summary
+  Overall result: Passed
+  Test Count: 5, Passed: 5, Failed: 0, Warnings: 0, Inconclusive: 0, Skipped: 0
+  Start time: 2026-11-03 02:06:21Z
+    End time: 2026-11-03 02:06:22Z
+    Duration: 1.646 seconds
+
