@@ -119,6 +119,12 @@ Abra http://localhost:5173. Vite redirige `/api` a la API .NET.
 | `cajero` | `Cajero2026!` | Cajero | 10 % |
 | `supervisor` | `Supervisor2026!` | Supervisor | 30 % |
 
+## Un millón de registros y dos laptops
+
+- `odoo/carga-masiva.ps1` carga 1 000 000 de productos y 1 000 000 de ventas sintéticas y crea los índices necesarios.
+- `scripts/servidor-lan.ps1` (laptop A: Odoo, PostgreSQL y API) y `scripts/cliente-lan.ps1 -Servidor <IP>` (laptop B: frontend).
+- Resultados, optimizaciones y solución de problemas de red: [docs/RENDIMIENTO_Y_RED.md](docs/RENDIMIENTO_Y_RED.md).
+
 ## Configuración
 
 | Clave | Dónde | Valor por defecto | Descripción |

@@ -9,8 +9,10 @@
   },
   "scripts": {
     "dev": "vite",
+    "dev:lan": "vite --host",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
+    "preview:lan": "vite preview --host",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest"

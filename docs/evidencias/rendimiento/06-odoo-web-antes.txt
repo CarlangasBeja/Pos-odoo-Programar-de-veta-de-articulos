@@ -1,0 +1,8 @@
+Productos del POS (lista)                              2226 ms   1-80 / 10000+
+Productos: buscar "GEN-0765432"                        3667 ms   1-1 / 1
+Productos: buscar "chocolate"                          6688 ms   1-80 / 10000+
+Órdenes del POS (lista)                                1270 ms   1-80 / 10000+
+Órdenes: buscar "Histórico - 0500000"                   434 ms   1-1 / 1
+Órdenes: abrir el detalle                               283 ms   1 / 1
+Productos: buscar "Sierra 765432" (raro)               4449 ms   
+Tablero del punto de venta (código de Odoo)           39295 ms   1-1 / 1

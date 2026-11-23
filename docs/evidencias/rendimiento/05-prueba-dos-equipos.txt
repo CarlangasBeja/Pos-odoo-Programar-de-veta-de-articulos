@@ -1,0 +1,5 @@
+catálogo cargado Catálogo de productos
+búsqueda "chocolate artesanal": 703 ms (incluye 250 ms de espera al escribir)
+venta registrada en 426 ms
+historial (1M ventas): 371 ms
+total 12339 ms

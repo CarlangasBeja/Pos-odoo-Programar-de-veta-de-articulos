@@ -9,6 +9,19 @@ name: pos-odoo20
 services:
   db:
     image: postgres:16
+    # Docker da solo 64 MB de memoria compartida (/dev/shm). Las consultas en paralelo sobre un millón de filas la
+    # agotan ("could not resize shared memory segment ... No space left on device") y Odoo responde con error.
+    shm_size: 1gb
+    # Ajustes para un millón de registros (los valores por defecto de PostgreSQL son mínimos: 128 MB de caché).
+    # jit=off: con consultas cortas del POS, la compilación JIT agrega latencia en lugar de ahorrarla.
+    command: >-
+      postgres
+      -c shared_buffers=${PG_SHARED_BUFFERS:-512MB}
+      -c effective_cache_size=${PG_EFFECTIVE_CACHE_SIZE:-2GB}
+      -c work_mem=16MB
+      -c maintenance_work_mem=256MB
+      -c random_page_cost=1.1
+      -c jit=off
     environment:
       POSTGRES_DB: postgres
       POSTGRES_USER: odoo
@@ -35,7 +48,9 @@ services:
       PGPORT: "5432"
       PGUSER: odoo
       PGPASSWORD: ${ODOO_DB_PASSWORD:-odoo}
-    command: ["odoo", "--db-filter=^${ODOO_DB_NAME:-pos}$$"]
+    # --workers: varios procesos atienden consultas en paralelo (con 0, Odoo usa un solo proceso y las consultas de
+    # varias cajas se atienden casi en fila). Ver docs/RENDIMIENTO_Y_RED.md.
+    command: ["odoo", "--db-filter=^${ODOO_DB_NAME:-pos}$$", "--workers=${ODOO_WORKERS:-4}", "--max-cron-threads=1"]
     volumes:
       - pos-odoo-data:/var/lib/odoo
       # Scripts de preparación disponibles dentro del contenedor (solo lectura).

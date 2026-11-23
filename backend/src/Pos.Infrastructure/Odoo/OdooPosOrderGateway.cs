@@ -99,12 +99,27 @@ public sealed class OdooPosOrderGateway(
     public async Task<Result<PagedResult<OrderSummary>>> SearchAsync(OrderSearchCriteria criteria, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(criteria);
-        var domain = BuildHistoryDomain(criteria);
 
+        // Rendimiento con un millón de ventas: un OR entre el nombre de la orden y los productos de sus líneas obliga a
+        // PostgreSQL a revisar todas las órdenes. Por separado, cada búsqueda usa su índice trigrama y tarda milisegundos.
+        // Primero se busca por orden o recibo; solo si no hay ninguna, por producto vendido. Ver docs/RENDIMIENTO_Y_RED.md.
+        var domain = BuildHistoryDomain(criteria, HistoryTextMatch.OrderOrReceipt);
         var count = await odoo.CallAsync(OrderModel, "search_count", new Dictionary<string, object?> { ["domain"] = domain }, cancellationToken);
         if (count is not OdooResponse.Success countResult)
         {
             return OdooErrors.From(count);
+        }
+
+        if (criteria.Text is not null && countResult.Result.GetInt32() == 0)
+        {
+            domain = BuildHistoryDomain(criteria, HistoryTextMatch.SoldProduct);
+            count = await odoo.CallAsync(OrderModel, "search_count", new Dictionary<string, object?> { ["domain"] = domain }, cancellationToken);
+            if (count is not OdooResponse.Success productCount)
+            {
+                return OdooErrors.From(count);
+            }
+
+            countResult = productCount;
         }
 
         var response = await odoo.CallAsync(
@@ -216,17 +231,22 @@ public sealed class OdooPosOrderGateway(
             payments);
     }
 
-    internal object[] BuildHistoryDomain(OrderSearchCriteria criteria)
+    internal object[] BuildHistoryDomain(OrderSearchCriteria criteria, HistoryTextMatch match = HistoryTextMatch.OrderOrReceipt)
     {
         var domain = new List<object> { new object[] { "config_id", "=", _options.PosConfigId } };
 
         if (criteria.Text is { } text)
         {
-            domain.Add("|");
-            domain.Add("|");
-            domain.Add(new object[] { "name", "ilike", text });
-            domain.Add(new object[] { "pos_reference", "ilike", text });
-            domain.Add(new object[] { "lines.full_product_name", "ilike", text });
+            if (match == HistoryTextMatch.OrderOrReceipt)
+            {
+                domain.Add("|");
+                domain.Add(new object[] { "name", "ilike", text });
+                domain.Add(new object[] { "pos_reference", "ilike", text });
+            }
+            else
+            {
+                domain.Add(new object[] { "lines.full_product_name", "ilike", text });
+            }
         }
 
         var state = criteria.State switch
@@ -309,4 +329,11 @@ public sealed class OdooPosOrderGateway(
             return TimeZoneInfo.Utc;
         }
     }
+}
+
+/// <summary>Dónde se busca el texto del historial: en la orden (nombre o recibo) o en los productos vendidos.</summary>
+internal enum HistoryTextMatch
+{
+    OrderOrReceipt,
+    SoldProduct,
 }

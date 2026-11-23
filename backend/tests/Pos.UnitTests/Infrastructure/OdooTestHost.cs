@@ -25,7 +25,8 @@ internal sealed class OdooTestHost
             new HttpClient(Handler) { BaseAddress = new Uri("http://odoo.test/"), Timeout = Timeout.InfiniteTimeSpan },
             Options,
             NullLogger<OdooJson2Client>.Instance);
-        ReferenceData = new OdooReferenceData(Client, new MemoryCache(new MemoryCacheOptions()), Options);
+        Cache = new MemoryCache(new MemoryCacheOptions());
+        ReferenceData = new OdooReferenceData(Client, Cache, Options);
     }
 
     public FakeHttpHandler Handler { get; } = new();
@@ -34,11 +35,13 @@ internal sealed class OdooTestHost
 
     public OdooJson2Client Client { get; }
 
+    public IMemoryCache Cache { get; }
+
     public OdooReferenceData ReferenceData { get; }
 
     public OdooPosOrderGateway Orders => new(Client, Options, NullLogger<OdooPosOrderGateway>.Instance);
 
-    public OdooProductCatalog Catalog => new(Client, ReferenceData);
+    public OdooProductCatalog Catalog => new(Client, ReferenceData, Cache);
 
     public OdooPosSessionGateway Sessions => new(Client, ReferenceData, Options);
 }

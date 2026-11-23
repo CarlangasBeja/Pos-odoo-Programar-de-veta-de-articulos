@@ -1,0 +1,24 @@
+Consulta                                         HTTP   mediana      peor  total filas
+Catálogo: primera página (sin filtro)             200       46ms       48ms      1000011
+Catálogo: página 1000                             200      135ms      491ms      1000011
+Catálogo: buscar texto 'chocolate'                200      280ms      372ms        49874
+Catálogo: buscar texto 'artesanal andino'         200      255ms      312ms         6958
+Catálogo: buscar código 'GEN-0765432'             200      123ms      168ms            1
+Catálogo: buscar código de barras exacto          200       84ms      144ms            1
+Catálogo: una sola letra 'a' (casi todo coincide)  200       50ms       52ms       988130
+Catálogo: texto sin resultados 'zzzxq'            200       60ms       60ms            0
+Catálogo: orden por precio desc                   200       58ms       84ms      1000011
+Catálogo: orden por código                        200       47ms       50ms      1000011
+Catálogo: filtrar por categoría                   200       49ms       53ms       400004
+Catálogo: categoría + texto 'premium'             200      109ms      129ms        33218
+Historial: primera página                         200      136ms      149ms      1000031
+Historial: página 500                             200      141ms      159ms      1000031
+Historial: buscar 'Histórico - 0500000'           200       97ms      142ms            1
+Historial: buscar producto 'yogur'                200      272ms      347ms        97681
+Historial: rango de un mes                        200      100ms      202ms        82155
+Detalle de una venta                              200       53ms       81ms             
+Sesión activa                                     200       49ms       50ms             
+Venta: vista previa (precios de Odoo)             200       74ms
+Venta: registrar en Odoo                          201      194ms   POS Web .NET - 000032
+Concurrencia: 10 usuarios, 40 consultas                    535ms      943ms (mediana / p95)  errores: 0
+[{"consulta": "Catálogo: primera página (sin filtro)", "http": 200, "mediana_ms": 46, "peor_ms": 48, "total": 1000011}, {"consulta": "Catálogo: página 1000", "http": 200, "mediana_ms": 135, "peor_ms": 491, "total": 1000011}, {"consulta": "Catálogo: buscar texto 'chocolate'", "http": 200, "mediana_ms": 280, "peor_ms": 372, "total": 49874}, {"consulta": "Catálogo: buscar texto 'artesanal andino'", "http": 200, "mediana_ms": 255, "peor_ms": 312, "total": 6958}, {"consulta": "Catálogo: buscar código 'GEN-0765432'", "http": 200, "mediana_ms": 123, "peor_ms": 168, "total": 1}, {"consulta": "Catálogo: buscar código de barras exacto", "http": 200, "mediana_ms": 84, "peor_ms": 144, "total": 1}, {"consulta": "Catálogo: una sola letra 'a' (casi todo coincide)", "http": 200, "mediana_ms": 50, "peor_ms": 52, "total": 988130}, {"consulta": "Catálogo: texto sin resultados 'zzzxq'", "http": 200, "mediana_ms": 60, "peor_ms": 60, "total": 0}, {"consulta": "Catálogo: orden por precio desc", "http": 200, "mediana_ms": 58, "peor_ms": 84, "total": 1000011}, {"consulta": "Catálogo: orden por código", "http": 200, "mediana_ms": 47, "peor_ms": 50, "total": 1000011}, {"consulta": "Catálogo: filtrar por categoría", "http": 200, "mediana_ms": 49, "peor_ms": 53, "total": 400004}, {"consulta": "Catálogo: categoría + texto 'premium'", "http": 200, "mediana_ms": 109, "peor_ms": 129, "total": 33218}, {"consulta": "Historial: primera página", "http": 200, "mediana_ms": 136, "peor_ms": 149, "total": 1000031}, {"consulta": "Historial: página 500", "http": 200, "mediana_ms": 141, "peor_ms": 159, "total": 1000031}, {"consulta": "Historial: buscar 'Histórico - 0500000'", "http": 200, "mediana_ms": 97, "peor_ms": 142, "total": 1}, {"consulta": "Historial: buscar producto 'yogur'", "http": 200, "mediana_ms": 272, "peor_ms": 347, "total": 97681}, {"consulta": "Historial: rango de un mes", "http": 200, "mediana_ms": 100, "peor_ms": 202, "total": 82155}, {"consulta": "Detalle de una venta", "http": 200, "mediana_ms": 53, "peor_ms": 81, "total": ""}, {"consulta": "Sesión activa", "http": 200, "mediana_ms": 49, "peor_ms": 50, "total": ""}, {"consulta": "concurrencia", "usuarios": 10, "mediana_ms": 535, "p95_ms": 943, "errores": 0}, {"consulta": "venta", "preview_ms": 74, "registro_ms": 194, "http": 201}]
