@@ -169,7 +169,8 @@ public sealed class OdooProductCatalogTests
             OdooProductCatalog.BuildDomain(criteria, supportsStock: true),
             new System.Text.Json.JsonSerializerOptions { Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping });
 
-        Assert.That(domain, Does.StartWith("""[["available_in_pos","=",true],["sale_ok","=",true],"|","|",["name","ilike","caf"],["default_code","ilike","caf"],["barcode","ilike","caf"]"""));
+        // El texto se busca en la plantilla con "any" para que Odoo genere una subconsulta indexable (rendimiento con 1M).
+        Assert.That(domain, Does.StartWith("""[["available_in_pos","=",true],["sale_ok","=",true],["product_tmpl_id","any",["|","|",["name","ilike","caf"],["default_code","ilike","caf"],["barcode","ilike","caf"]]]"""));
         Assert.That(domain, Does.Contain("""["pos_categ_ids","child_of",5]"""));
         Assert.That(domain, Does.Contain("""["qty_available",">",0]"""));
         Assert.That(OdooProductCatalog.OrderBy(ProductSort.PriceDesc), Does.StartWith("list_price desc"));

@@ -9,14 +9,17 @@
   },
   "scripts": {
     "dev": "vite",
+    "dev:lan": "vite --host",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
+    "preview:lan": "vite preview --host",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest"
   },
   "dependencies": {
     "@fontsource/atkinson-hyperlegible": "5.2.6",
+    "jspdf": "4.2.1",
     "lucide-react": "0.511.0",
     "react": "19.1.0",
     "react-dom": "19.1.0"

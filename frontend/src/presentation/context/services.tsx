@@ -1,8 +1,9 @@
 import { createContext, type ReactNode, useContext } from 'react';
 import type { TicketStore } from '../../application/cartStore';
-import type { AuthGateway, CatalogGateway, KeyGenerator, SalesGateway, SessionGateway, TokenStore } from '../../application/ports';
+import type { AuthGateway, CatalogGateway, KeyGenerator, ReceiptDocumentRenderer, SalesGateway, SessionGateway, TokenStore } from '../../application/ports';
 import { LoginUseCase, LogoutUseCase, RestoreSessionUseCase } from '../../application/usecases/auth';
 import { StartCheckoutUseCase } from '../../application/usecases/checkout';
+import { GenerateSaleReceiptPdfUseCase } from '../../application/usecases/receipt';
 import {
   CheckOdooConnectionUseCase,
   GetActiveSessionUseCase,
@@ -34,6 +35,7 @@ export interface Services {
   readonly searchSalesHistory: SearchSalesHistoryUseCase;
   readonly getSaleDetail: GetSaleDetailUseCase;
   readonly startCheckout: StartCheckoutUseCase;
+  readonly generateReceiptPdf: GenerateSaleReceiptPdfUseCase;
 }
 
 /** Puertos que necesitan los casos de uso. La raíz de composición entrega las implementaciones (HTTP o dobles de prueba). */
@@ -46,6 +48,7 @@ export interface ServiceDependencies {
   readonly catalog: CatalogGateway;
   readonly sessions: SessionGateway;
   readonly sales: SalesGateway;
+  readonly receipts: ReceiptDocumentRenderer;
 }
 
 /** Conecta cada caso de uso con los puertos que usa (inyección por constructor, sin contenedor). */
@@ -65,6 +68,7 @@ export function createServices(deps: ServiceDependencies): Services {
     searchSalesHistory: new SearchSalesHistoryUseCase(deps.sales),
     getSaleDetail: new GetSaleDetailUseCase(deps.sales),
     startCheckout: new StartCheckoutUseCase(deps.sales, deps.keys, deps.ticket),
+    generateReceiptPdf: new GenerateSaleReceiptPdfUseCase(deps.sales, deps.receipts),
   };
 }
 

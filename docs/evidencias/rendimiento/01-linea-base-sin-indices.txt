@@ -1,0 +1,17 @@
+Consulta                                         HTTP   mediana      peor  total filas
+Catálogo: primera página (sin filtro)             200     1140ms     2769ms      1000011  <- MÁS DE 2 s
+Catálogo: página 1000                             200     2142ms     4069ms      1000011  <- MÁS DE 2 s
+Catálogo: buscar texto 'chocolate'                200     2974ms     3088ms        49874  <- MÁS DE 2 s
+Catálogo: buscar texto 'artesanal andino'         200     2614ms     2694ms         6958  <- MÁS DE 2 s
+Catálogo: buscar código 'GEN-0765432'             200     2487ms     3149ms            1  <- MÁS DE 2 s
+Catálogo: buscar código de barras exacto          200     2470ms     2785ms            1  <- MÁS DE 2 s
+Catálogo: orden por precio desc                   200      990ms     1024ms      1000011  <- más de 1 s
+Catálogo: filtrar por categoría                   200      725ms      874ms       400004
+Historial: primera página                         200      209ms     1695ms      1000009  <- más de 1 s
+Historial: página 500                             200      221ms      261ms      1000009
+Historial: buscar 'Histórico - 0500000'           200     5719ms     7797ms            1  <- MÁS DE 2 s
+Historial: buscar producto 'yogur'                200     2229ms     2582ms        97681  <- MÁS DE 2 s
+Historial: rango de un mes                        200      213ms      297ms        82155
+Detalle de una venta                              200       68ms       91ms             
+Sesión activa                                     200       58ms       67ms             
+[{"consulta": "Catálogo: primera página (sin filtro)", "http": 200, "mediana_ms": 1140, "peor_ms": 2769, "total": 1000011}, {"consulta": "Catálogo: página 1000", "http": 200, "mediana_ms": 2142, "peor_ms": 4069, "total": 1000011}, {"consulta": "Catálogo: buscar texto 'chocolate'", "http": 200, "mediana_ms": 2974, "peor_ms": 3088, "total": 49874}, {"consulta": "Catálogo: buscar texto 'artesanal andino'", "http": 200, "mediana_ms": 2614, "peor_ms": 2694, "total": 6958}, {"consulta": "Catálogo: buscar código 'GEN-0765432'", "http": 200, "mediana_ms": 2487, "peor_ms": 3149, "total": 1}, {"consulta": "Catálogo: buscar código de barras exacto", "http": 200, "mediana_ms": 2470, "peor_ms": 2785, "total": 1}, {"consulta": "Catálogo: orden por precio desc", "http": 200, "mediana_ms": 990, "peor_ms": 1024, "total": 1000011}, {"consulta": "Catálogo: filtrar por categoría", "http": 200, "mediana_ms": 725, "peor_ms": 874, "total": 400004}, {"consulta": "Historial: primera página", "http": 200, "mediana_ms": 209, "peor_ms": 1695, "total": 1000009}, {"consulta": "Historial: página 500", "http": 200, "mediana_ms": 221, "peor_ms": 261, "total": 1000009}, {"consulta": "Historial: buscar 'Histórico - 0500000'", "http": 200, "mediana_ms": 5719, "peor_ms": 7797, "total": 1}, {"consulta": "Historial: buscar producto 'yogur'", "http": 200, "mediana_ms": 2229, "peor_ms": 2582, "total": 97681}, {"consulta": "Historial: rango de un mes", "http": 200, "mediana_ms": 213, "peor_ms": 297, "total": 82155}, {"consulta": "Detalle de una venta", "http": 200, "mediana_ms": 68, "peor_ms": 91, "total": ""}, {"consulta": "Sesión activa", "http": 200, "mediana_ms": 58, "peor_ms": 67, "total": ""}]

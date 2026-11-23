@@ -194,12 +194,64 @@ public sealed class OdooPosOrderGatewayTests
             Pos.Application.Common.PageRequest.Create(1, 20, 20).Value);
 
         var domain = JsonSerializer.Serialize(host.Orders.BuildHistoryDomain(criteria), ReadableJson);
+        var byProduct = JsonSerializer.Serialize(host.Orders.BuildHistoryDomain(criteria, HistoryTextMatch.SoldProduct), ReadableJson);
 
         Assert.That(domain, Does.Contain("""["config_id","=",1]"""));
-        Assert.That(domain, Does.Contain("""["lines.full_product_name","ilike","agua"]"""));
+        Assert.That(domain, Does.Contain("""["name","ilike","agua"],["pos_reference","ilike","agua"]"""));
+        Assert.That(domain, Does.Not.Contain("lines."), "Orden/recibo y producto no van en el mismo OR (rendimiento con 1M)");
+        Assert.That(byProduct, Does.Contain("""["lines.full_product_name","ilike","agua"]"""));
+        Assert.That(byProduct, Does.Not.Contain("pos_reference"));
         Assert.That(domain, Does.Contain("""["state","=","paid"]"""));
         // Medianoche en Bogotá (UTC-5) = 05:00 UTC
         Assert.That(domain, Does.Contain("""["date_order",">=","2026-10-29 05:00:00"]"""));
         Assert.That(domain, Does.Contain("""["date_order","<","2026-10-30 05:00:00"]"""));
+    }
+
+    [Test]
+    public async Task ElHistorialBuscaPrimeroPorOrdenYSoloSinCoincidenciasPorProducto()
+    {
+        var host = new OdooTestHost();
+        var counts = new List<string>();
+        host.Handler
+            .On("pos.order/search_count", body =>
+            {
+                var domain = body.GetProperty("domain").GetRawText();
+                counts.Add(domain);
+                return FakeHttpHandler.Json(domain.Contains("lines.full_product_name", StringComparison.Ordinal) ? 3 : 0);
+            })
+            .On("pos.order/search_read", _ => FakeHttpHandler.Json(Array.Empty<object>()));
+        var criteria = new Pos.Application.Features.History.OrderSearchCriteria(
+            "yogur", Pos.Application.Features.History.OrderStateFilter.All, null, null, Pos.Application.Common.PageRequest.Create(1, 10, 10).Value);
+
+        var result = await host.Orders.SearchAsync(criteria, CancellationToken.None);
+
+        Assert.That(result.IsSuccess, Is.True);
+        Assert.That(counts, Has.Count.EqualTo(2), "Sin órdenes que coincidan, se busca por producto");
+        Assert.That(counts[0], Does.Contain("pos_reference"));
+        Assert.That(counts[1], Does.Contain("lines.full_product_name"));
+        Assert.That(result.Value.TotalCount, Is.EqualTo(3));
+        var read = host.Handler.Requests.Last(r => r.Uri.AbsolutePath.EndsWith("pos.order/search_read", StringComparison.Ordinal));
+        Assert.That(read.Body, Does.Contain("lines.full_product_name"), "La página se lee con el mismo dominio que se contó");
+    }
+
+    [Test]
+    public async Task SiLaOrdenCoincideNoSeBuscaPorProducto()
+    {
+        var host = new OdooTestHost();
+        var countCalls = 0;
+        host.Handler
+            .On("pos.order/search_count", _ =>
+            {
+                countCalls++;
+                return FakeHttpHandler.Json(1);
+            })
+            .On("pos.order/search_read", _ => FakeHttpHandler.Json(Array.Empty<object>()));
+        var criteria = new Pos.Application.Features.History.OrderSearchCriteria(
+            "000123", Pos.Application.Features.History.OrderStateFilter.All, null, null, Pos.Application.Common.PageRequest.Create(1, 10, 10).Value);
+
+        var result = await host.Orders.SearchAsync(criteria, CancellationToken.None);
+
+        Assert.That(result.IsSuccess, Is.True);
+        Assert.That(countCalls, Is.EqualTo(1));
     }
 }

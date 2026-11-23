@@ -11,6 +11,7 @@ import { usePos } from '../../context/app';
 import { useToast } from '../../context/feedback';
 import { useServices } from '../../context/services';
 import { parseAmount } from '../../utils/format';
+import { ReceiptPdfButtons } from '../receipt/ReceiptPdfButtons';
 
 interface CheckoutDialogProps {
   readonly open: boolean;
@@ -171,9 +172,12 @@ export function CheckoutDialog({ open, provisionalTotal, onClose }: CheckoutDial
         );
       case 'registered':
         return (
-          <Button variant="primary" size="lg" onClick={onClose} data-autofocus>
-            Nueva venta
-          </Button>
+          <>
+            {step.sale.orderId !== null && <ReceiptPdfButtons orderId={step.sale.orderId} />}
+            <Button variant="primary" size="lg" onClick={onClose} data-autofocus>
+              Nueva venta
+            </Button>
+          </>
         );
       case 'failed':
         return (

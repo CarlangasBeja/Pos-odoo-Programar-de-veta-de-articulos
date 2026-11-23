@@ -1,7 +1,7 @@
 import { render } from '@testing-library/react';
 import type { ReactElement } from 'react';
 import { TicketStore } from '../../src/application/cartStore';
-import type { CatalogGateway, SalesGateway, SessionGateway } from '../../src/application/ports';
+import type { CatalogGateway, ReceiptDocumentRenderer, SalesGateway, SessionGateway } from '../../src/application/ports';
 import { ApiClient } from '../../src/infrastructure/http/apiClient';
 import { HttpAuthGateway } from '../../src/infrastructure/http/gateways';
 import { PosProvider, ThemeProvider } from '../../src/presentation/context/app';
@@ -14,6 +14,7 @@ export interface TestServicesOptions {
   readonly sessions?: SessionGateway;
   readonly sales?: SalesGateway;
   readonly fetchImpl?: typeof fetch;
+  readonly receipts?: ReceiptDocumentRenderer;
 }
 
 /** Arma los servicios de la aplicación con dobles de prueba (sin red). */
@@ -29,6 +30,7 @@ export function testServices(options: TestServicesOptions = {}): Services {
     catalog: options.catalog ?? new FakeCatalog([]),
     sessions: options.sessions ?? new FakeSessions(),
     sales: options.sales ?? new FakeSales(),
+    receipts: options.receipts ?? { render: () => Promise.resolve(new Blob(['%PDF-1.3'], { type: 'application/pdf' })) },
   });
 }
 

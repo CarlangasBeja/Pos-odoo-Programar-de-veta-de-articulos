@@ -1,6 +1,8 @@
 import type { DiscountPolicy } from '../domain/discount';
 import type { Product, ProductCategory } from '../domain/product';
 import type { OrderDetail, OrderState, OrderSummary, PosSession, SalePreview, SaleRegistration } from '../domain/sale';
+import type { Currency } from '../domain/money';
+import type { SaleReceipt } from '../domain/receipt';
 
 /*
  * Puertos de la aplicación: describen lo que los casos de uso necesitan del exterior,
@@ -93,4 +95,9 @@ export interface TokenStore {
 /** Genera claves de idempotencia (UUID v4). */
 export interface KeyGenerator {
   next(): string;
+}
+
+/** Genera el documento de una nota de venta (PDF). La implementación vive en Infrastructure. */
+export interface ReceiptDocumentRenderer {
+  render(receipt: SaleReceipt, currency: Currency): Promise<Blob>;
 }

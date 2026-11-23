@@ -7,6 +7,7 @@ import { usePos } from '../../context/app';
 import { useServices } from '../../context/services';
 import { useQuery } from '../../hooks/hooks';
 import { formatDateTime, PLACEHOLDER_CURRENCY } from '../../utils/format';
+import { ReceiptPdfButtons } from '../receipt/ReceiptPdfButtons';
 import { stateBadgeClass } from './orderState';
 
 /** RF-14: detalle de la venta tal como quedó en Odoo (líneas, pagos y cambio). */
@@ -25,9 +26,12 @@ export function SaleDetailDialog({ orderId, onClose }: { readonly orderId: numbe
       onClose={onClose}
       width={640}
       footer={
-        <Button variant="primary" onClick={onClose}>
-          Cerrar
-        </Button>
+        <>
+          {order && <ReceiptPdfButtons orderId={order.id} />}
+          <Button variant="primary" onClick={onClose}>
+            Cerrar
+          </Button>
+        </>
       }
     >
       {detail.error ? (

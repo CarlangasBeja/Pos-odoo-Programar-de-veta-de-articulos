@@ -10,6 +10,7 @@ import { createRoot } from 'react-dom/client';
 import { TicketStore } from './application/cartStore';
 import { ApiClient } from './infrastructure/http/apiClient';
 import { HttpAuthGateway, HttpCatalogGateway, HttpSalesGateway, HttpSessionGateway } from './infrastructure/http/gateways';
+import { JsPdfReceiptRenderer } from './infrastructure/pdf/jsPdfReceiptRenderer';
 import { CryptoKeyGenerator, SessionTokenStore } from './infrastructure/storage/browser';
 import { App } from './presentation/App';
 import { createServices } from './presentation/context/services';
@@ -30,6 +31,7 @@ const services = createServices({
   catalog: new HttpCatalogGateway(api),
   sessions: new HttpSessionGateway(api),
   sales: new HttpSalesGateway(api),
+  receipts: new JsPdfReceiptRenderer(),
 });
 
 const root = document.getElementById('root');
