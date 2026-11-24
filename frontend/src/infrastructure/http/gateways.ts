@@ -1,3 +1,4 @@
+import { FINAL_CONSUMER, type SaleCustomer } from '../../domain/customer';
 import type {
   AuthGateway,
   CatalogGateway,
@@ -77,8 +78,9 @@ export class HttpSalesGateway implements SalesGateway {
     return this.api.post<SalePreview>('/api/sales/preview', draft, { signal });
   }
 
-  register(idempotencyKey: string, draft: SaleDraft, payment: PaymentInput): Promise<SaleRegistration> {
-    return this.api.post<SaleRegistration>('/api/sales', { ...draft, payment }, {
+  register(idempotencyKey: string, draft: SaleDraft, payment: PaymentInput, customer: SaleCustomer = FINAL_CONSUMER): Promise<SaleRegistration> {
+    const customerBody = customer.kind === 'identified' ? { name: customer.name, identification: customer.identification } : null;
+    return this.api.post<SaleRegistration>('/api/sales', { ...draft, payment, customer: customerBody }, {
       headers: { 'Idempotency-Key': idempotencyKey },
       timeoutMs: REGISTER_TIMEOUT_MS,
     });

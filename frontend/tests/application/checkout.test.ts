@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { TicketStore } from '../../src/application/cartStore';
 import { AppError } from '../../src/application/errors';
-import { REJECTED_BY_ODOO, StartCheckoutUseCase } from '../../src/application/usecases/checkout';
+import { CUSTOMER_FORBIDDEN, REJECTED_BY_ODOO, StartCheckoutUseCase } from '../../src/application/usecases/checkout';
 import { agua, cafe, FakeSales, registration, SequenceKeys } from '../fakes';
 
 const PAYMENT = { paymentMethodId: 2, amountTendered: 50 };
@@ -118,6 +118,21 @@ describe('Proceso de cobro', () => {
 
     expect(outcome.kind).toBe('failed');
     expect(sales.registerCalls[0]?.key).not.toBe(sales.registerCalls[1]?.key);
+  });
+
+  it('si Odoo no deja crear el cliente, la venta NO quedó incierta: se informa el error y se puede cobrar de nuevo', async () => {
+    sales.registerBehavior = async () => {
+      throw new AppError('unavailable', 'Odoo no permite al usuario de integración crear clientes.', CUSTOMER_FORBIDDEN);
+    };
+    const process = startCheckout.execute(1);
+    const before = process.idempotencyKey;
+
+    const outcome = await process.pay(PAYMENT, { kind: 'identified', name: 'Ana Pérez', identification: '1710034065' });
+
+    expect(outcome.kind).toBe('failed');
+    expect(process.isUncertain).toBe(false);
+    expect(process.idempotencyKey).toBe(before);
+    expect(ticket.getSnapshot().locked).toBe(false);
   });
 
   it('un error de validación conserva la clave (no quedó registrado nada en el servidor)', async () => {

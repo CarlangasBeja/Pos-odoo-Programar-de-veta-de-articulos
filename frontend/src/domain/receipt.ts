@@ -1,3 +1,4 @@
+import { FINAL_CONSUMER_LABEL } from './customer';
 import type { OrderDetail } from './sale';
 
 /** Nota de venta lista para imprimir: solo datos ya confirmados por Odoo, sin cálculos de la interfaz. */
@@ -8,6 +9,10 @@ export interface SaleReceipt {
   readonly reference: string | null;
   readonly date: string;
   readonly sessionName: string;
+  /** Nombre del cliente o "Consumidor final". */
+  readonly customerName: string;
+  /** Cédula del cliente; nula para el consumidor final. */
+  readonly customerId: string | null;
   readonly lines: ReadonlyArray<{
     readonly name: string;
     readonly quantity: number;
@@ -34,6 +39,8 @@ export function buildSaleReceipt(order: OrderDetail): SaleReceipt {
     reference: order.posReference,
     date: order.date,
     sessionName: order.sessionName,
+    customerName: order.customer?.name ?? FINAL_CONSUMER_LABEL,
+    customerId: order.customer?.identification ?? null,
     lines: order.lines.map((l) => ({
       name: l.productName,
       quantity: l.quantity,

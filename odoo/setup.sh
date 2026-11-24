@@ -36,7 +36,7 @@ else
 fi
 
 step "3/5 Instalando el módulo Punto de venta"
-"${COMPOSE[@]}" exec -T odoo odoo -d "$DATABASE" -i point_of_sale --stop-after-init --no-http
+"${COMPOSE[@]}" exec -T odoo odoo -d "$DATABASE" -i point_of_sale,stock --stop-after-init --no-http
 
 step "4/5 Configurando productos, impuestos, pagos, sesión POS y usuario de integración"
 OUTPUT="$("${COMPOSE[@]}" exec -T odoo sh -c "odoo shell -d $DATABASE --no-http < /opt/pos-setup/setup_pos.py")"

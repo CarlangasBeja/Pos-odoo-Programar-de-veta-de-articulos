@@ -40,6 +40,21 @@ describe('Nota de venta en PDF', () => {
     expect(receipt.change).toBe(8645);
     expect(receipt.lines).toHaveLength(2);
     expect(receipt.fileName).toBe('nota-de-venta-POS-Web-NET-000025.pdf');
+    expect(receipt.customerName).toBe('Consumidor final');
+    expect(receipt.customerId).toBeNull();
+  });
+
+  it('la factura muestra el nombre y la cédula del cliente', async () => {
+    const receipt = buildSaleReceipt({ ...order, customer: { name: 'Ana Torres', identification: '1710034065' } });
+    const blob = await new JsPdfReceiptRenderer().render(receipt, COP);
+    const text = await new Promise<string>((resolve) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.readAsBinaryString(blob);
+    });
+    expect(receipt.customerName).toBe('Ana Torres');
+    expect(text).toContain('Ana Torres');
+    expect(text).toContain('1710034065');
   });
 
   it('el caso de uso lee la orden de Odoo y entrega el PDF con su nombre de archivo', async () => {

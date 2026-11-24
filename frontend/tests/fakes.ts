@@ -1,3 +1,4 @@
+import type { SaleCustomer } from '../src/domain/customer';
 import type { CatalogGateway, KeyGenerator, Page, PaymentInput, ProductQuery, SaleDraft, SalesGateway, SessionGateway, TokenStore } from '../src/application/ports';
 import type { DiscountPolicy } from '../src/domain/discount';
 import type { Currency } from '../src/domain/money';
@@ -99,7 +100,7 @@ export class FakeSessions implements SessionGateway {
 type RegisterBehavior = (key: string, draft: SaleDraft, payment: PaymentInput) => Promise<SaleRegistration>;
 
 export class FakeSales implements SalesGateway {
-  readonly registerCalls: Array<{ key: string; draft: SaleDraft; payment: PaymentInput }> = [];
+  readonly registerCalls: Array<{ key: string; draft: SaleDraft; payment: PaymentInput; customer?: SaleCustomer }> = [];
   registerBehavior: RegisterBehavior = async (key, _draft, payment) => registration(key, 'registered', payment.amountTendered);
   checkBehavior: (key: string) => Promise<SaleRegistration> = async (key) => registration(key, 'registered', 50);
   policies: DiscountPolicy[] = [];
@@ -110,8 +111,8 @@ export class FakeSales implements SalesGateway {
   async preview(draft: SaleDraft): Promise<SalePreview> {
     return { sessionId: draft.sessionId, lines: [], grossBeforeDiscount: 29.75, discount: null, untaxed: 25, taxAmount: 4.75, total: 29.75, taxes: [] };
   }
-  register(key: string, draft: SaleDraft, payment: PaymentInput) {
-    this.registerCalls.push({ key, draft, payment });
+  register(key: string, draft: SaleDraft, payment: PaymentInput, customer?: SaleCustomer) {
+    this.registerCalls.push({ key, draft, payment, customer });
     return this.registerBehavior(key, draft, payment);
   }
   checkAttempt(key: string) {

@@ -14,7 +14,7 @@ export class JsPdfReceiptRenderer implements ReceiptDocumentRenderer {
   async render(receipt: SaleReceipt, currency: Currency): Promise<Blob> {
     const { jsPDF } = await import('jspdf');
     const money = (value: number) => pdfText(formatMoney(value, currency));
-    const height = 62 + receipt.lines.length * 2 * LINE + receipt.payments.length * LINE;
+    const height = 74 + receipt.lines.length * 2 * LINE + receipt.payments.length * LINE;
     const doc = new jsPDF({ unit: 'mm', format: [WIDTH, Math.max(height, 80)] });
     const right = WIDTH - MARGIN;
     const textWidth = WIDTH - 2 * MARGIN;
@@ -43,6 +43,19 @@ export class JsPdfReceiptRenderer implements ReceiptDocumentRenderer {
     row('Orden', pdfText(receipt.orderName));
     row('Recibo', pdfText(receipt.reference ?? '-'));
     row('Fecha', pdfText(new Date(receipt.date).toLocaleString('es-CO')));
+    rule();
+
+    doc.setFont('helvetica', 'normal').setFontSize(8.5);
+    doc.text('Cliente', MARGIN, y);
+    y += LINE;
+    doc.setFont('helvetica', 'bold').setFontSize(9);
+    for (const part of (doc.splitTextToSize(pdfText(receipt.customerName), textWidth) as string[]).slice(0, 2)) {
+      doc.text(part, MARGIN, y);
+      y += LINE;
+    }
+    if (receipt.customerId) {
+      row('Cédula', receipt.customerId);
+    }
     rule();
 
     for (const line of receipt.lines) {

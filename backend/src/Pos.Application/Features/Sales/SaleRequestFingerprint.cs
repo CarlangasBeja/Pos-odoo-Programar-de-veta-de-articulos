@@ -10,7 +10,7 @@ namespace Pos.Application.Features.Sales;
 /// </summary>
 public static class SaleRequestFingerprint
 {
-    public static string Compute(ISaleDraft sale, PaymentRequest? payment)
+    public static string Compute(ISaleDraft sale, PaymentRequest? payment, CustomerRequest? customer = null)
     {
         ArgumentNullException.ThrowIfNull(sale);
 
@@ -37,6 +37,14 @@ public static class SaleRequestFingerprint
                 .Append(payment.PaymentMethodId.ToString(CultureInfo.InvariantCulture))
                 .Append(':')
                 .Append(payment.AmountTendered.ToString("0.######", CultureInfo.InvariantCulture));
+        }
+
+        if (customer is not null)
+        {
+            builder.Append("|customer=")
+                .Append((customer.Identification ?? string.Empty).Trim())
+                .Append(':')
+                .Append(string.Join(' ', (customer.Name ?? string.Empty).Split(' ', StringSplitOptions.RemoveEmptyEntries)).ToUpperInvariant());
         }
 
         var hash = SHA256.HashData(Encoding.UTF8.GetBytes(builder.ToString()));

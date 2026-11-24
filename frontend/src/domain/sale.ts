@@ -97,6 +97,8 @@ export interface OrderDetail {
   readonly amountPaid: number;
   readonly amountReturn: number;
   readonly note: string | null;
+  /** Cliente de la orden en Odoo; nulo o ausente = consumidor final. */
+  readonly customer?: { readonly name: string; readonly identification: string | null } | null;
   readonly lines: ReadonlyArray<{
     readonly productId: number;
     readonly productName: string;

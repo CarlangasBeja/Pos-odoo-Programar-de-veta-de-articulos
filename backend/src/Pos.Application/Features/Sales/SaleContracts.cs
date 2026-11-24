@@ -10,6 +10,9 @@ public sealed record DiscountRequest(string PolicyCode, decimal? Percentage);
 
 public sealed record PaymentRequest(int PaymentMethodId, decimal AmountTendered);
 
+/// <summary>Cliente identificado (nombre y cédula). Sin cliente en la solicitud, la venta es a consumidor final.</summary>
+public sealed record CustomerRequest(string? Name, string? Identification);
+
 /// <summary>
 /// Venta en preparación tal como la envía el cliente: sesión, productos con cantidades y descuento pedido.
 /// La implementan la Query de vista previa y el Command de registro, que comparten reglas de forma y de negocio.

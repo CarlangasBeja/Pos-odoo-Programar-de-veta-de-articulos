@@ -34,15 +34,19 @@ export const ProductTile = memo(function ProductTile({ product, currency, quanti
   return (
     <button
       type="button"
-      className={`product-tile${pulse ? ' product-tile--added' : ''}`}
+      className={`product-tile${quantityInCart > 0 ? ' product-tile--in-cart' : ''}${pulse ? ' product-tile--added' : ''}`}
       disabled={!product.sellable}
       onClick={handleClick}
-      aria-label={`Agregar ${product.name}, ${formatMoney(product.priceWithTaxes, currency)}`}
+      aria-label={`Agregar ${product.name}, ${formatMoney(product.priceWithTaxes, currency)}${quantityInCart > 0 ? `, ${formatQuantity(quantityInCart)} en el ticket` : ''}`}
       aria-describedby={!product.sellable ? `reason-${product.id}` : undefined}
     >
       <span className="product-tile__top">
         <span className="product-tile__code">{product.code ?? 'Sin código'}</span>
-        {quantityInCart > 0 && <span className="product-tile__in-cart num">× {formatQuantity(quantityInCart)}</span>}
+        {quantityInCart > 0 && (
+          <span className="product-tile__in-cart num" aria-hidden="true">
+            {formatQuantity(quantityInCart)} en el ticket
+          </span>
+        )}
       </span>
       <span className="product-tile__name">{product.name}</span>
       {!product.sellable ? (
@@ -59,6 +63,11 @@ export const ProductTile = memo(function ProductTile({ product, currency, quanti
         </span>
         <span className="product-tile__add" aria-hidden="true">
           <Plus size={20} />
+          {quantityInCart > 0 && (
+            <span className="product-tile__count num" key={quantityInCart}>
+              {formatQuantity(quantityInCart)}
+            </span>
+          )}
         </span>
       </span>
     </button>

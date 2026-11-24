@@ -5,7 +5,7 @@
 .DESCRIPTION
   1. Levanta PostgreSQL y Odoo 20 (docker compose).
   2. Crea la base de datos (compañía en Colombia, español) si no existe.
-  3. Instala el módulo Punto de venta (point_of_sale).
+  3. Instala los módulos Punto de venta (point_of_sale) e Inventario (stock), para mostrar existencias.
   4. Ejecuta setup_pos.py: impuestos, productos, métodos de pago, punto de venta, usuario de integración,
      sesión POS abierta y una API key nueva.
   5. Guarda la API key y los identificadores en los user-secrets de Pos.Api (nunca en el repositorio).
@@ -68,7 +68,7 @@ if ($exists.Trim() -ne "1") {
 }
 
 Step "3/5 Instalando el módulo Punto de venta (puede tardar unos minutos)"
-Invoke-Checked { docker compose -f $compose exec -T odoo odoo -d $Database -i point_of_sale --stop-after-init --no-http } "No se pudo instalar point_of_sale."
+Invoke-Checked { docker compose -f $compose exec -T odoo odoo -d $Database -i point_of_sale,stock --stop-after-init --no-http } "No se pudo instalar point_of_sale y stock."
 
 Step "4/5 Configurando productos, impuestos, pagos, sesión POS y usuario de integración"
 $output = docker compose -f $compose exec -T odoo sh -c "odoo shell -d $Database --no-http < /opt/pos-setup/setup_pos.py"

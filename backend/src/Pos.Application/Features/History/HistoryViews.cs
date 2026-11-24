@@ -55,4 +55,8 @@ public sealed record OrderDetail(
     decimal AmountReturn,
     string? Note,
     IReadOnlyList<OrderLineDetail> Lines,
-    IReadOnlyList<OrderPaymentDetail> Payments);
+    IReadOnlyList<OrderPaymentDetail> Payments,
+    OrderCustomer? Customer = null);
+
+/// <summary>Cliente de la orden en Odoo (<c>partner_id</c>). Nulo = consumidor final.</summary>
+public sealed record OrderCustomer(string Name, string? Identification);

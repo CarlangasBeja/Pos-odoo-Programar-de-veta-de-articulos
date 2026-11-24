@@ -1,3 +1,4 @@
+import type { SaleCustomer } from '../domain/customer';
 import type { DiscountPolicy } from '../domain/discount';
 import type { Product, ProductCategory } from '../domain/product';
 import type { OrderDetail, OrderState, OrderSummary, PosSession, SalePreview, SaleRegistration } from '../domain/sale';
@@ -57,7 +58,8 @@ export interface PaymentInput {
 export interface SalesGateway {
   discountPolicies(signal?: AbortSignal): Promise<readonly DiscountPolicy[]>;
   preview(draft: SaleDraft, signal?: AbortSignal): Promise<SalePreview>;
-  register(idempotencyKey: string, draft: SaleDraft, payment: PaymentInput): Promise<SaleRegistration>;
+  /** Sin cliente (o consumidor final) la venta va sin datos del cliente. */
+  register(idempotencyKey: string, draft: SaleDraft, payment: PaymentInput, customer?: SaleCustomer): Promise<SaleRegistration>;
   checkAttempt(idempotencyKey: string): Promise<SaleRegistration>;
   history(query: HistoryQuery, signal?: AbortSignal): Promise<Page<OrderSummary>>;
   detail(orderId: number, signal?: AbortSignal): Promise<OrderDetail>;

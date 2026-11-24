@@ -10,6 +10,7 @@ internal static class OdooErrors
     public const string ForbiddenCode = "ODOO.FORBIDDEN";
     public const string RejectedCode = "ODOO.REJECTED";
     public const string UnexpectedResponseCode = "ODOO.UNEXPECTED_RESPONSE";
+    public const string CustomerForbiddenCode = "ODOO.CUSTOMER_FORBIDDEN";
     private const int MaxOdooMessageLength = 300;
 
     public static Error From(OdooResponse response) => response switch
@@ -40,6 +41,12 @@ internal static class OdooErrors
         RejectedCode,
         $"Odoo rechazó la operación: {Trim(fault.Message)}",
         ErrorKind.ExternalRejected);
+
+    /// <summary>El usuario de integración no tiene el grupo "Contacto / Creación". La clave de la venta no se consume: se puede reintentar.</summary>
+    public static Error CustomerCreationForbidden() => new(
+        CustomerForbiddenCode,
+        "Odoo no permite al usuario de integración crear clientes. Ejecute de nuevo odoo/setup.ps1 (agrega el permiso «Contacto / Creación») o venda a Consumidor final.",
+        ErrorKind.ExternalUnavailable);
 
     public static Error UnexpectedResponse() => new(
         UnexpectedResponseCode,

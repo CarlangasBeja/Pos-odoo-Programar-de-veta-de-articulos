@@ -19,7 +19,8 @@ public sealed record RegisterSaleRequest(
     int SessionId,
     IReadOnlyList<SaleLineRequest>? Lines,
     DiscountRequest? Discount,
-    PaymentRequest? Payment);
+    PaymentRequest? Payment,
+    CustomerRequest? Customer = null);
 
 /// <summary>
 /// Controlador delgado: traduce HTTP en Commands y Queries, los envía por <see cref="ISender"/> y traduce el resultado
@@ -51,7 +52,7 @@ public sealed class SalesController(ISender sender) : ControllerBase
         CancellationToken cancellationToken)
     {
         var key = Guid.TryParse(idempotencyKey, out var parsed) ? parsed : Guid.Empty;
-        var command = new RegisterSaleCommand(key, request.SessionId, request.Lines, request.Discount, request.Payment, User.ToOperator());
+        var command = new RegisterSaleCommand(key, request.SessionId, request.Lines, request.Discount, request.Payment, User.ToOperator(), request.Customer);
 
         var result = await sender.Send(command, cancellationToken);
         if (result.IsFailure)

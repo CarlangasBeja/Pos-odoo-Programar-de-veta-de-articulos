@@ -13,7 +13,7 @@ internal static class PosOrderPayloadMapper
     private const int CreateCommand = 0;
     private const int ReplaceCommand = 6;
 
-    public static Dictionary<string, object?> Map(Sale sale, OperatorIdentity registeredBy)
+    public static Dictionary<string, object?> Map(Sale sale, OperatorIdentity registeredBy, int? partnerId = null)
     {
         ArgumentNullException.ThrowIfNull(sale);
         ArgumentNullException.ThrowIfNull(registeredBy);
@@ -57,7 +57,7 @@ internal static class PosOrderPayloadMapper
             },
         };
 
-        return new Dictionary<string, object?>
+        var order = new Dictionary<string, object?>
         {
             ["uuid"] = sale.Key.ToString(),
             ["session_id"] = sale.Session.Id,
@@ -72,6 +72,14 @@ internal static class PosOrderPayloadMapper
             ["to_invoice"] = false,
             ["internal_note"] = $"Registrada desde el POS Web (.NET) por {registeredBy.DisplayName} ({registeredBy.Role.ToDisplayName()}).",
         };
+
+        // Consumidor final = orden sin cliente (como en la caja de Odoo); un cliente identificado va como partner_id.
+        if (partnerId is { } partner)
+        {
+            order["partner_id"] = partner;
+        }
+
+        return order;
     }
 
     public static string LineUuid(Guid saleKey, int index) => DeterministicGuid.Create(saleKey, $"line:{index}").ToString();

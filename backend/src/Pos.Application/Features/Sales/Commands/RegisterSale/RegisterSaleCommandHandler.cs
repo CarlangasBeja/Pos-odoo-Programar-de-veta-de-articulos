@@ -2,6 +2,7 @@ using MediatR;
 using Pos.Application.Contracts.Gateways;
 using Pos.Application.Contracts.Persistence;
 using Pos.Domain.Common;
+using Pos.Domain.Customers;
 using Pos.Domain.Sales;
 
 namespace Pos.Application.Features.Sales.Commands.RegisterSale;
@@ -49,7 +50,7 @@ public sealed class RegisterSaleCommandHandler : IRequestHandler<RegisterSaleCom
             return IdempotencyErrors.PaymentRequired();
         }
 
-        var fingerprint = SaleRequestFingerprint.Compute(command, payment);
+        var fingerprint = SaleRequestFingerprint.Compute(command, payment, command.Customer);
         var reservation = await _attempts.TryReserveAsync(command.IdempotencyKey, fingerprint, cancellationToken);
 
         return reservation switch
@@ -99,6 +100,16 @@ public sealed class RegisterSaleCommandHandler : IRequestHandler<RegisterSaleCom
             }
 
             var sale = composed.Value;
+            if (command.Customer is { } customerRequest)
+            {
+                var customer = Customer.Identified(customerRequest.Name, customerRequest.Identification);
+                var assigned = customer.IsSuccess ? sale.AssignCustomer(customer.Value) : Result.Failure(customer.Errors);
+                if (assigned.IsFailure)
+                {
+                    return Result<SaleRegistrationResult>.Failure(assigned.Errors);
+                }
+            }
+
             var method = session.Value.Session.FindPaymentMethod(payment.PaymentMethodId);
             if (method.IsFailure)
             {

@@ -1,8 +1,11 @@
+import { FINAL_CONSUMER, type SaleCustomer } from '../../domain/customer';
 import type { TicketState, TicketStore } from '../cartStore';
 import { AppError, toAppError } from '../errors';
 import type { KeyGenerator, PaymentInput, SaleDraft, SalesGateway } from '../ports';
 import type { SalePreview, SaleRegistration } from '../../domain/sale';
 
+/** Odoo no dejó crear el cliente: la venta no se envió y la clave sigue libre. */
+export const CUSTOMER_FORBIDDEN = 'ODOO.CUSTOMER_FORBIDDEN';
 export const REJECTED_BY_ODOO = 'SALE.REJECTED_BY_ODOO';
 const ATTEMPT_NOT_FOUND = 'SALE.ATTEMPT_NOT_FOUND';
 
@@ -52,11 +55,12 @@ export class CheckoutProcess {
     return this.sales.preview(toSaleDraft(this.sessionId, this.ticket.getSnapshot()), signal);
   }
 
-  async pay(payment: PaymentInput): Promise<CheckoutOutcome> {
+  /** Registra la venta. Un reintento con la misma clave debe enviar el mismo pago y el mismo cliente. */
+  async pay(payment: PaymentInput, customer: SaleCustomer = FINAL_CONSUMER): Promise<CheckoutOutcome> {
     const draft = toSaleDraft(this.sessionId, this.ticket.getSnapshot());
     this.ticket.lock();
     try {
-      return this.settle(await this.sales.register(this.key, draft, payment));
+      return this.settle(await this.sales.register(this.key, draft, payment, customer));
     } catch (error) {
       return this.handleFailure(toAppError(error));
     }
@@ -102,6 +106,12 @@ export class CheckoutProcess {
   }
 
   private handleFailure(error: AppError): CheckoutOutcome {
+    if (error.code === CUSTOMER_FORBIDDEN) {
+      // Se sabe con certeza que la venta no llegó a Odoo (falló antes, al crear el cliente): no es un resultado incierto.
+      this.uncertain = false;
+      this.ticket.unlock();
+      return { kind: 'failed', error };
+    }
     if (error.isTransient) {
       // Pudo o no llegar al servidor: se trata como incierto y se conserva la misma clave.
       this.uncertain = true;

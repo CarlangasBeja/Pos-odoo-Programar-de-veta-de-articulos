@@ -1,5 +1,6 @@
 using Pos.Domain.Catalog;
 using Pos.Domain.Common;
+using Pos.Domain.Customers;
 using Pos.Domain.Discounts;
 using Pos.Domain.Payments;
 using Pos.Domain.Sessions;
@@ -73,6 +74,9 @@ public sealed class Sale
     public Payment? Payment { get; private set; }
 
     public string? StatusReason { get; private set; }
+
+    /// <summary>Cliente de la venta; por omisión, consumidor final.</summary>
+    public Customer Customer { get; private set; } = Customer.FinalConsumer;
 
     public static Result<Sale> Start(Guid key, PosSession session)
     {
@@ -149,6 +153,21 @@ public sealed class Sale
 
         Discount = decision;
         Recalculate();
+        return Result.Success();
+    }
+
+    /// <summary>Asigna el cliente que aparecerá en la orden de Odoo y en la nota de venta. Solo mientras la venta se edita.</summary>
+    public Result AssignCustomer(Customer customer)
+    {
+        ArgumentNullException.ThrowIfNull(customer);
+
+        var editable = EnsureDraft();
+        if (editable.IsFailure)
+        {
+            return editable;
+        }
+
+        Customer = customer;
         return Result.Success();
     }
 

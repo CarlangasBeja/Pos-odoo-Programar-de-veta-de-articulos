@@ -131,6 +131,18 @@ SELECT n.id, r.tax_id FROM new_tmpl n JOIN product_taxes_rel r ON r.prod_id = n.
 INSERT INTO pos_category_product_template_rel (product_template_id, pos_category_id)
 SELECT n.id, c.id FROM new_tmpl n JOIN new_cat c ON c.idx = substr(n.default_code, 5)::int % :categorias;
 
+-- Existencias: si Odoo tiene Inventario (stock) instalado, cada producto recibe una cantidad entre 0 y 300 en el almacén
+-- principal (uno de cada 20 queda en 0 para probar "Sin existencias"). Sin Inventario, este paso se omite.
+SELECT to_regclass('stock_quant') IS NOT NULL AND EXISTS (SELECT 1 FROM ir_module_module WHERE name = 'stock' AND state = 'installed') AS hay_inventario \gset
+\if :hay_inventario
+SELECT w.lot_stock_id AS ubicacion, w.company_id AS compania FROM stock_warehouse w ORDER BY w.id LIMIT 1 \gset
+UPDATE product_template SET is_storable = true WHERE id IN (SELECT id FROM new_tmpl);
+INSERT INTO stock_quant (product_id, company_id, location_id, quantity, reserved_quantity, in_date, inventory_quantity_set,
+                         create_uid, write_uid, create_date, write_date)
+SELECT p.id, :compania, :ubicacion, CASE WHEN p.id % 20 = 0 THEN 0 ELSE 1 + floor(random() * 300) END, 0, now(), false, 1, 1, now(), now()
+FROM product_product p JOIN new_tmpl n ON n.id = p.product_tmpl_id;
+\endif
+
 SELECT count(*) AS productos_creados FROM new_tmpl;
 
 -- ---------------------------------------------------------------------------------------------------

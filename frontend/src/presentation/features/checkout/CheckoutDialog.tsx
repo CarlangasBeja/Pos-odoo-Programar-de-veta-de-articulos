@@ -1,7 +1,8 @@
-import { Banknote, CircleCheckBig, CreditCard, RefreshCw, SearchCheck, TriangleAlert, Wallet } from 'lucide-react';
+import { Banknote, CircleCheckBig, CreditCard, IdCard, RefreshCw, SearchCheck, TriangleAlert, UserRound, Wallet } from 'lucide-react';
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { type AppError, toAppError } from '../../../application/errors';
 import type { CheckoutOutcome, CheckoutProcess } from '../../../application/usecases/checkout';
+import { CEDULA_LENGTH, CUSTOMER_NAME_MAX, customerLabel, FINAL_CONSUMER, sanitizeCedula, sanitizeCustomerName, type SaleCustomer, validateCustomer } from '../../../domain/customer';
 import { formatMoney, formatQuantity } from '../../../domain/money';
 import { type PaymentMethod, quickCashAmounts, type SalePreview, type SaleRegistration, validatePayment } from '../../../domain/sale';
 import { Button } from '../../components/Button';
@@ -44,6 +45,12 @@ export function CheckoutDialog({ open, provisionalTotal, onClose }: CheckoutDial
   const [methodId, setMethodId] = useState<number | null>(null);
   const [amountText, setAmountText] = useState('');
   const [touched, setTouched] = useState(false);
+  const customerId = useId();
+  const [customerMode, setCustomerMode] = useState<'final' | 'identified'>('final');
+  const [customerName, setCustomerName] = useState('');
+  const [customerCedula, setCustomerCedula] = useState('');
+  const [customerTouched, setCustomerTouched] = useState(false);
+  const [paidCustomer, setPaidCustomer] = useState<SaleCustomer>(FINAL_CONSUMER);
 
   const current = session.data;
   const currency = current?.currency;
@@ -66,6 +73,10 @@ export function CheckoutDialog({ open, provisionalTotal, onClose }: CheckoutDial
   useEffect(() => {
     if (open && current) {
       process.current = startCheckout.execute(current.id);
+      setCustomerMode('final');
+      setCustomerName('');
+      setCustomerCedula('');
+      setCustomerTouched(false);
       setMethodId(methods.find((m) => m.supported && m.type === 'cash')?.id ?? methods.find((m) => m.supported)?.id ?? null);
       void verify();
     }
@@ -79,6 +90,12 @@ export function CheckoutDialog({ open, provisionalTotal, onClose }: CheckoutDial
   const paymentError = preview ? validatePayment(method, tendered, total) : null;
   const change = Number.isFinite(tendered) && tendered > total ? tendered - total : 0;
   const largeChange = change > 0 && change >= total && total > 0;
+  const customerCheck = customerMode === 'identified' ? validateCustomer(customerName, customerCedula) : ({ ok: true, customer: FINAL_CONSUMER } as const);
+  const customerErrors = customerTouched && !customerCheck.ok ? customerCheck.errors : {};
+  // La cédula se revisa en cuanto tiene sus 10 dígitos, sin esperar a cobrar.
+  const cedulaComplete = customerCedula.length === CEDULA_LENGTH;
+  const cedulaError = customerErrors.identification ?? (cedulaComplete && !customerCheck.ok ? (customerCheck.errors.identification ?? null) : null);
+  const cedulaOk = cedulaComplete && !cedulaError;
 
   const applyOutcome = (outcome: CheckoutOutcome, previewForUncertain: SalePreview | null) => {
     switch (outcome.kind) {
@@ -97,9 +114,11 @@ export function CheckoutDialog({ open, provisionalTotal, onClose }: CheckoutDial
 
   const pay = async () => {
     setTouched(true);
-    if (!preview || !method || paymentError || !process.current) return;
+    setCustomerTouched(true);
+    if (!preview || !method || paymentError || !customerCheck.ok || !process.current) return;
     setStep({ kind: 'processing', preview });
-    const outcome = await process.current.pay({ paymentMethodId: method.id, amountTendered: tendered });
+    setPaidCustomer(customerCheck.customer);
+    const outcome = await process.current.pay({ paymentMethodId: method.id, amountTendered: tendered }, customerCheck.customer);
     applyOutcome(outcome, preview);
   };
 
@@ -114,7 +133,8 @@ export function CheckoutDialog({ open, provisionalTotal, onClose }: CheckoutDial
     if (step.kind !== 'uncertain' || !process.current || !step.preview || !method) return;
     const previewToRetry = step.preview;
     setStep({ kind: 'processing', preview: previewToRetry });
-    const outcome = await process.current.pay({ paymentMethodId: method.id, amountTendered: tendered });
+    // El reintento usa la misma clave: debe llevar el mismo cliente que el primer intento.
+    const outcome = await process.current.pay({ paymentMethodId: method.id, amountTendered: tendered }, paidCustomer);
     applyOutcome(outcome, previewToRetry);
   };
 
@@ -254,7 +274,87 @@ export function CheckoutDialog({ open, provisionalTotal, onClose }: CheckoutDial
             )}
           </section>
 
-          <section className="checkout__payment" aria-label="Pago">
+          <section className="checkout__payment" aria-label="Cliente y pago">
+            <div className="checkout__customer" role="group" aria-label="Cliente">
+              <h3 className="checkout__heading">Cliente</h3>
+              <div className="method-list" role="radiogroup" aria-label="Tipo de cliente">
+                <button
+                  type="button"
+                  role="radio"
+                  className="method"
+                  aria-checked={customerMode === 'final'}
+                  disabled={step.kind === 'processing'}
+                  onClick={() => {
+                    setCustomerMode('final');
+                    setCustomerTouched(false);
+                  }}
+                >
+                  <UserRound size={22} aria-hidden="true" />
+                  <span>Consumidor final</span>
+                </button>
+                <button
+                  type="button"
+                  role="radio"
+                  className="method"
+                  aria-checked={customerMode === 'identified'}
+                  disabled={step.kind === 'processing'}
+                  onClick={() => setCustomerMode('identified')}
+                >
+                  <IdCard size={22} aria-hidden="true" />
+                  <span>Con nombre y cédula</span>
+                </button>
+              </div>
+              {customerMode === 'identified' && (
+                <div className="customer-fields">
+                  <div className="field">
+                    <label className="field__label" htmlFor={`${customerId}-name`}>
+                      Nombre completo
+                    </label>
+                    <input
+                      id={`${customerId}-name`}
+                      className="input"
+                      autoComplete="off"
+                      maxLength={CUSTOMER_NAME_MAX}
+                      value={customerName}
+                      disabled={step.kind === 'processing'}
+                      aria-invalid={customerErrors.name ? true : undefined}
+                      aria-describedby={`${customerId}-name-msg`}
+                      onChange={(e) => setCustomerName(sanitizeCustomerName(e.target.value))}
+                      onBlur={() => customerName !== '' && setCustomerTouched(true)}
+                      autoFocus
+                    />
+                    <FieldMessage id={`${customerId}-name-msg`} error={customerErrors.name ?? null} />
+                  </div>
+                  <div className="field">
+                    <label className="field__label" htmlFor={`${customerId}-id`}>
+                      Cédula
+                    </label>
+                    <input
+                      id={`${customerId}-id`}
+                      className="input num"
+                      inputMode="numeric"
+                      autoComplete="off"
+                      maxLength={CEDULA_LENGTH}
+                      placeholder="10 dígitos, sin guiones"
+                      value={customerCedula}
+                      disabled={step.kind === 'processing'}
+                      aria-invalid={cedulaError ? true : undefined}
+                      aria-describedby={`${customerId}-id-msg`}
+                      onChange={(e) => setCustomerCedula(sanitizeCedula(e.target.value))}
+                      onBlur={() => customerCedula !== '' && setCustomerTouched(true)}
+                    />
+                    {cedulaOk ? (
+                    <p className="field__ok" id={`${customerId}-id-msg`}>
+                      <CircleCheckBig size={14} aria-hidden="true" /> Cédula válida
+                    </p>
+                  ) : (
+                    <FieldMessage id={`${customerId}-id-msg`} error={cedulaError} />
+                  )}
+                  </div>
+                </div>
+              )}
+            </div>
+
             <h3 className="checkout__heading">Método de pago</h3>
             <div className="method-list" role="radiogroup" aria-label="Método de pago">
               {methods.map((m) => (
@@ -353,6 +453,10 @@ export function CheckoutDialog({ open, provisionalTotal, onClose }: CheckoutDial
             <div>
               <dt>Recibo</dt>
               <dd>{step.sale.posReference ?? '—'}</dd>
+            </div>
+            <div>
+              <dt>Cliente</dt>
+              <dd>{paidCustomer.kind === 'identified' ? customerLabel(paidCustomer) : customerLabel(null)}</dd>
             </div>
             <div>
               <dt>Total</dt>

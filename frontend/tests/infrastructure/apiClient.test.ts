@@ -104,7 +104,19 @@ describe('Cliente HTTP (P08)', () => {
       lines: [{ productId: 14, quantity: 2 }],
       discount: null,
       payment: { paymentMethodId: 2, amountTendered: 50 },
+      customer: null,
     });
+  });
+
+  it('envía el nombre y la cédula del cliente; consumidor final va sin datos (customer: null)', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(new Response(JSON.stringify({ status: 'registered' }), { status: 201 }));
+    const sales = new HttpSalesGateway(client(fetchImpl, new MemoryTokenStore()));
+    const draft = { sessionId: 1, lines: [{ productId: 14, quantity: 1 }], discount: null };
+
+    await sales.register('clave-2', draft, { paymentMethodId: 2, amountTendered: 50 }, { kind: 'identified', name: 'Ana Pérez', identification: '1710034065' });
+
+    const [, init] = fetchImpl.mock.calls[0] as [string, RequestInit];
+    expect(JSON.parse(init.body as string).customer).toEqual({ name: 'Ana Pérez', identification: '1710034065' });
   });
 
   it('omite los filtros vacíos en la URL', async () => {

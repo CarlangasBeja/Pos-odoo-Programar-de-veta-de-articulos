@@ -98,6 +98,7 @@ for code, name, cop, usd, tax, category, barcode, available in PRODUCTS:
         'barcode': barcode,
         'list_price': price(cop, usd),
         'type': 'consu',
+        'is_storable': True,  # con Inventario instalado, Odoo lleva las existencias y el POS las muestra
         'sale_ok': True,
         'available_in_pos': available,
         'taxes_id': [(6, 0, tax.ids if tax else [])],
@@ -110,6 +111,22 @@ for code, name, cop, usd, tax, category, barcode, available in PRODUCTS:
         template = env['product.template'].create(values)
     products[code] = template.product_variant_id.id
 log(f"{len(products)} productos listos")
+
+# Existencias iniciales en el almacén principal. Solo se cargan si el producto aún no tiene existencias, para que
+# volver a ejecutar el script no borre las ventas que ya descontaron unidades. PAN-002 queda en 0 a propósito.
+INITIAL_STOCK = {"CAF-001": 120, "CAF-002": 80, "BEB-001": 200, "BEB-002": 60, "COM-001": 35, "COM-002": 25,
+                 "PAN-001": 48, "PAN-002": 0, "SNK-001": 90, "SNK-002": 150}
+warehouse = env['stock.warehouse'].search([('company_id', '=', company.id)], limit=1)
+if warehouse:
+    stock_location = warehouse.lot_stock_id
+    for code, qty in INITIAL_STOCK.items():
+        product = env['product.product'].browse(products[code])
+        has_quants = env['stock.quant'].search_count([('product_id', '=', product.id), ('location_id', 'child_of', stock_location.id)])
+        if qty > 0 and not has_quants:
+            env['stock.quant'].with_context(inventory_mode=True).create({
+                'product_id': product.id, 'location_id': stock_location.id, 'inventory_quantity': qty,
+            }).action_apply_inventory()
+    log(f"Existencias cargadas en {stock_location.complete_name}")
 
 
 # 4. Diarios y métodos de pago ------------------------------------------------------------------
@@ -174,7 +191,9 @@ user_values = {
     'active': True,
     'company_id': company.id,
     'company_ids': [(6, 0, [company.id])],
-    'group_ids': [(4, env.ref('base.group_user').id), (4, pos_user_group.id), (4, integration_group.id)],
+    # Contacto / Creación: para registrar clientes con nombre y cédula, como lo hace un cajero en la caja de Odoo.
+    'group_ids': [(4, env.ref('base.group_user').id), (4, pos_user_group.id), (4, integration_group.id),
+                  (4, env.ref('base.group_partner_manager').id)],
 }
 if lang:
     user_values['lang'] = LANG

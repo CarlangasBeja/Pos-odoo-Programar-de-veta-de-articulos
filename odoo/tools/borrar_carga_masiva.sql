@@ -27,6 +27,12 @@ WHERE id IN (SELECT product_tmpl_id FROM gen_vendidos);
 CREATE TEMP TABLE gen_tmpl ON COMMIT DROP AS SELECT id FROM product_template WHERE default_code LIKE 'GEN-%';
 DELETE FROM product_taxes_rel WHERE prod_id IN (SELECT id FROM gen_tmpl);
 DELETE FROM pos_category_product_template_rel WHERE product_template_id IN (SELECT id FROM gen_tmpl);
+-- Existencias de los productos sintéticos (solo si Odoo tiene Inventario instalado).
+DO $$ BEGIN
+  IF to_regclass('stock_quant') IS NOT NULL THEN
+    DELETE FROM stock_quant WHERE product_id IN (SELECT id FROM product_product WHERE product_tmpl_id IN (SELECT id FROM gen_tmpl));
+  END IF;
+END $$;
 DELETE FROM product_product WHERE product_tmpl_id IN (SELECT id FROM gen_tmpl);
 DELETE FROM product_template WHERE id IN (SELECT id FROM gen_tmpl);
 

@@ -1,3 +1,4 @@
+import { customerLabel } from '../../../domain/customer';
 import { formatMoney, formatQuantity } from '../../../domain/money';
 import { ORDER_STATE_LABELS } from '../../../domain/sale';
 import { Button } from '../../components/Button';
@@ -59,6 +60,10 @@ export function SaleDetailDialog({ orderId, onClose }: { readonly orderId: numbe
             <div>
               <dt>Sesión</dt>
               <dd>{order.sessionName}</dd>
+            </div>
+            <div>
+              <dt>Cliente</dt>
+              <dd>{customerLabel(order.customer)}</dd>
             </div>
           </dl>
 

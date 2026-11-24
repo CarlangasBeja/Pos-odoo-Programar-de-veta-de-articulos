@@ -6,6 +6,7 @@ using Pos.Application.Contracts.Gateways;
 using Pos.Application.Features.History;
 using Pos.Application.Features.Sales;
 using Pos.Domain.Common;
+using Pos.Domain.Customers;
 using Pos.Domain.Sales;
 
 namespace Pos.Infrastructure.Odoo;
@@ -20,11 +21,12 @@ public sealed class OdooPosOrderGateway(
     ILogger<OdooPosOrderGateway> logger) : IPosOrderGateway
 {
     private const string OrderModel = "pos.order";
+    private const string PartnerModel = "res.partner";
 
     private static readonly string[] SummaryFields =
         ["id", "name", "pos_reference", "date_order", "state", "amount_total", "amount_paid", "amount_return", "session_id", "internal_note"];
 
-    private static readonly string[] DetailFields = [.. SummaryFields, "amount_tax", "uuid"];
+    private static readonly string[] DetailFields = [.. SummaryFields, "amount_tax", "uuid", "partner_id"];
 
     private readonly OdooOptions _options = options.Value;
 
@@ -32,7 +34,19 @@ public sealed class OdooPosOrderGateway(
     {
         ArgumentNullException.ThrowIfNull(sale);
 
-        var payload = PosOrderPayloadMapper.Map(sale, registeredBy);
+        int? partnerId = null;
+        if (!sale.Customer.IsFinalConsumer)
+        {
+            var partner = await ResolvePartnerAsync(sale.Customer, cancellationToken);
+            if (partner.IsFailure)
+            {
+                return new OrderSubmissionOutcome.Rejected(partner.Errors[0]);
+            }
+
+            partnerId = partner.Value;
+        }
+
+        var payload = PosOrderPayloadMapper.Map(sale, registeredBy, partnerId);
         var response = await odoo.CallAsync(
             OrderModel,
             "sync_from_ui",
@@ -143,6 +157,74 @@ public sealed class OdooPosOrderGateway(
         return new PagedResult<OrderSummary>(items, criteria.Page.Page, criteria.Page.PageSize, countResult.Result.GetInt32());
     }
 
+    /// <summary>
+    /// Cliente de Odoo (<c>res.partner</c>) con esa cédula en <c>vat</c>; si no existe, se crea. Lo mismo hace la caja de Odoo
+    /// al registrar un cliente nuevo. Crear contactos requiere el grupo "Contacto / Creación" (lo agrega odoo/setup_pos.py).
+    /// </summary>
+    private async Task<Result<int>> ResolvePartnerAsync(Customer customer, CancellationToken cancellationToken)
+    {
+        var found = await odoo.CallAsync(
+            PartnerModel,
+            "search_read",
+            new Dictionary<string, object?>
+            {
+                ["domain"] = new object[] { new object[] { "vat", "=", customer.Identification ?? string.Empty } },
+                ["fields"] = new[] { "id" },
+                ["limit"] = 1,
+            },
+            cancellationToken);
+        if (found is not OdooResponse.Success foundSuccess)
+        {
+            return OdooErrors.From(found);
+        }
+
+        if (OdooValues.Records(foundSuccess.Result).FirstOrDefault() is { ValueKind: JsonValueKind.Object } existing)
+        {
+            return OdooValues.Int(existing, "id");
+        }
+
+        var created = await odoo.CallAsync(
+            PartnerModel,
+            "create",
+            new Dictionary<string, object?>
+            {
+                ["vals_list"] = new object[] { new Dictionary<string, object?> { ["name"] = customer.Name, ["vat"] = customer.Identification } },
+            },
+            cancellationToken);
+        return created switch
+        {
+            OdooResponse.Success { Result: { ValueKind: JsonValueKind.Array } ids } when ids.GetArrayLength() > 0 => ids[0].GetInt32(),
+            OdooResponse.Success { Result: { ValueKind: JsonValueKind.Number } id } => id.GetInt32(),
+            OdooResponse.Success => OdooErrors.UnexpectedResponse(),
+            OdooResponse.Fault { IsPermissionProblem: true } => OdooErrors.CustomerCreationForbidden(),
+            _ => OdooErrors.From(created),
+        };
+    }
+
+    private async Task<OrderCustomer?> ReadCustomerAsync(JsonElement order, CancellationToken cancellationToken)
+    {
+        if (OdooValues.Many2One(order, "partner_id") is not { } partner)
+        {
+            return null;
+        }
+
+        // La cédula es un dato adicional: si no se puede leer, la venta se muestra igual con el nombre.
+        var response = await odoo.CallAsync(
+            PartnerModel,
+            "search_read",
+            new Dictionary<string, object?>
+            {
+                ["domain"] = new object[] { new object[] { "id", "=", partner.Id } },
+                ["fields"] = new[] { "vat" },
+                ["limit"] = 1,
+            },
+            cancellationToken);
+        var vat = response is OdooResponse.Success success && OdooValues.Records(success.Result).FirstOrDefault() is { ValueKind: JsonValueKind.Object } record
+            ? OdooValues.String(record, "vat")
+            : null;
+        return new OrderCustomer(partner.Name, vat);
+    }
+
     public async Task<Result<OrderDetail?>> GetDetailAsync(int orderId, CancellationToken cancellationToken)
     {
         var orderResponse = await odoo.CallAsync(
@@ -228,7 +310,8 @@ public sealed class OdooPosOrderGateway(
             OdooValues.Decimal(order, "amount_return"),
             summary.Note,
             lines,
-            payments);
+            payments,
+            await ReadCustomerAsync(order, cancellationToken));
     }
 
     internal object[] BuildHistoryDomain(OrderSearchCriteria criteria, HistoryTextMatch match = HistoryTextMatch.OrderOrReceipt)
