@@ -1,11 +1,12 @@
 import { ChevronLeft, ChevronRight, LoaderCircle, PackageSearch, ScanBarcode, Search, X } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ProductSort } from '../../../application/ports';
-import { matchesCodeExactly, type Product } from '../../../domain/product';
+import { formatQuantity } from '../../../domain/money';
+import { matchesCodeExactly, type Product, stockConfirmationFor } from '../../../domain/product';
 import { Button } from '../../components/Button';
 import { Banner, EmptyState } from '../../components/Feedback';
 import { usePos } from '../../context/app';
-import { useToast } from '../../context/feedback';
+import { useConfirm, useToast } from '../../context/feedback';
 import { useServices } from '../../context/services';
 import { useDebouncedValue, useMediaQuery, useQuery, useTicket } from '../../hooks/hooks';
 import { PLACEHOLDER_CURRENCY } from '../../utils/format';
@@ -26,6 +27,7 @@ export function CatalogPanel() {
   const { searchProducts, getProductCategories, ticket } = useServices();
   const { session } = usePos();
   const toast = useToast();
+  const confirm = useConfirm();
   const { cart } = useTicket();
   const compact = useMediaQuery('(max-width: 640px)');
   const searchRef = useRef<HTMLInputElement>(null);
@@ -65,14 +67,32 @@ export function CatalogPanel() {
   const currency = session.data?.currency ?? PLACEHOLDER_CURRENCY;
   const filtersActive = text !== '' || categoryId !== null || onlyInStock || sort !== 'nameAsc';
 
-  const add = (product: Product) => {
+  const add = async (product: Product) => {
+    // Sin existencias en Odoo no se bloquea la venta (puede haber unidades en bodega sin registrar), pero se confirma.
+    const check = stockConfirmationFor(product, inCart.get(product.id) ?? 0);
+    if (check) {
+      const ok = await confirm(
+        check.reason === 'outOfStock'
+          ? {
+              title: '¿Agregar un producto sin existencias?',
+              message: `Odoo registra 0 unidades de «${product.name}». Agréguelo solo si el producto está físicamente en la tienda o en bodega.`,
+              confirmLabel: 'Sí, agregar',
+              cancelLabel: 'No agregar',
+              tone: 'warning',
+            }
+          : {
+              title: '¿Agregar más unidades de las registradas?',
+              message: `Odoo registra ${formatQuantity(check.available)} unidad(es) de «${product.name}» y el ticket ya las tiene todas. Agregue otra solo si hay unidades físicas.`,
+              confirmLabel: 'Sí, agregar',
+              cancelLabel: 'No agregar',
+              tone: 'warning',
+            },
+      );
+      if (!ok) return;
+    }
     const change = ticket.add(product);
     if (!change.ok) {
       toast({ tone: 'error', title: 'No se agregó el producto', message: change.error });
-      return;
-    }
-    if (product.availability.status === 'outOfStock') {
-      toast({ tone: 'warning', title: `${product.name}: sin existencias en Odoo`, message: 'Se agregó al ticket; verifique que haya unidades físicas.' });
     }
   };
 
@@ -84,7 +104,7 @@ export function CatalogPanel() {
       const exact = await searchProducts.execute({ search: code, categoryId: null, onlyInStock: false, sort: 'nameAsc', page: 1, pageSize: 10 });
       const match = exact.items.find((p) => matchesCodeExactly(p, code));
       if (match) {
-        add(match);
+        await add(match);
         setText('');
       } else {
         toast({ tone: 'info', title: 'Seleccione el producto en la lista', message: `Ningún producto tiene exactamente el código «${code}».` });

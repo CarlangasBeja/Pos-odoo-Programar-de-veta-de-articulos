@@ -28,3 +28,24 @@ export function matchesCodeExactly(product: Product, text: string): boolean {
   const needle = text.trim().toLowerCase();
   return needle.length > 0 && (product.barcode?.toLowerCase() === needle || product.code?.toLowerCase() === needle);
 }
+
+/** Motivo para pedir confirmación antes de agregar una unidad más de un producto al ticket. */
+export type StockConfirmation =
+  | { readonly reason: 'outOfStock' }
+  | { readonly reason: 'exceedsStock'; readonly available: number };
+
+/**
+ * Odoo permite vender sin existencias (puede haber unidades en bodega o en exhibición sin registrar), así que el POS no
+ * lo bloquea, pero pide confirmación: al agregar un producto con 0 unidades, o la primera unidad que supera las registradas.
+ */
+export function stockConfirmationFor(product: Product, quantityInCart: number): StockConfirmation | null {
+  const { availability } = product;
+  if (availability.status === 'outOfStock') {
+    return quantityInCart === 0 ? { reason: 'outOfStock' } : null;
+  }
+  if (availability.status === 'available' && availability.quantity !== null) {
+    const available = availability.quantity;
+    return quantityInCart <= available && quantityInCart + 1 > available ? { reason: 'exceedsStock', available } : null;
+  }
+  return null;
+}
